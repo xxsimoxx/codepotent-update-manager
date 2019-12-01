@@ -33,6 +33,23 @@ if (!defined('ABSPATH')) {
 }
 
 /**
+ * Hash an URL if it's not already.
+ *
+ * @author Simone Fioravanti
+ *
+ * @since 1.0.0
+ *
+ * @return string
+ */
+function hash_if_not( $site ){
+ 	if ( 128 != strlen($site) || true == strpos($site, '.') ){
+ 		return hash('sha512', $site);
+ 	} else {
+		return $site;	
+ 	}
+}
+
+/**
  * Get request.
  *
  * @author John Alarcon
@@ -93,7 +110,7 @@ function get_request() {
 	// Triggered for statistics (the hooked function isn't intended to return or echo something)
 	do_action( 'cp_um_logging', array(
 		'slug'=>$request["plugin"],
-		'site'=>$request["site_url"]
+		'site'=>hash_if_not($request["site_url"])
 	) );
 
 	// Return the cleansed request.
@@ -230,7 +247,6 @@ function query_plugins() {
 			unset($value); 
 			if (!in_array($request['site_url'], $can_test_updates_sha512, true)) {
 				trigger_error('NOT IN SHA!', E_USER_WARNING);
-
 				return [];
 			}			
 		}
