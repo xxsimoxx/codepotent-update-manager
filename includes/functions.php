@@ -78,9 +78,23 @@ function get_request() {
 	if ($endpoint[0]->post_status === 'pending') {
 		$can_test_updates = get_allowed_test_urls($endpoint[0]->ID);
 		if (!in_array($request['site_url'], $can_test_updates, true)) {
-			return [];
+			// Plain domain not in whitelist, check the sha512
+			$can_test_updates_sha512 = $can_test_updates;
+			foreach ( $can_test_updates_sha512 as &$value){
+				$value = hash('sha512', $value);
+			}
+			unset($value); 
+			if (!in_array($request['site_url'], $can_test_updates_sha512, true)) {
+				return [];
+			}
 		}
 	}
+
+	// Triggered for statistics (the hooked function isn't intended to return or echo something)
+	do_action( 'cp_um_logging', array(
+		'slug'=>$request["plugin"],
+		'site'=>$request["site_url"]
+	) );
 
 	// Return the cleansed request.
 	return $request;
@@ -208,10 +222,20 @@ function query_plugins() {
 	if ($endpoint[0]->post_status === 'pending') {
 		$can_test_updates = get_allowed_test_urls($endpoint[0]->ID);
 		if (!in_array($request['site_url'], $can_test_updates, true)) {
-			return [];
+			// Plain domain not in whitelist, check the sha512
+			$can_test_updates_sha512 = $can_test_updates;
+			foreach ( $can_test_updates_sha512 as &$value){
+				$value = hash('sha512', $value);
+			}
+			unset($value); 
+			if (!in_array($request['site_url'], $can_test_updates_sha512, true)) {
+				trigger_error('NOT IN SHA!', E_USER_WARNING);
+
+				return [];
+			}			
 		}
 	}
-
+	
 	// Get plugin data string.
 	$content = get_post_meta($endpoint[0]->ID, $identifier, true);
 

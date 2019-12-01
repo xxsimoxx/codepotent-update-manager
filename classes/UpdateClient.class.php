@@ -383,7 +383,8 @@ class UpdateClient {
 		}
 
 		// Site URL; allows for particular URLs to test updates before pushing.
-		$body['site_url'] = site_url();
+		// Send it hashed so it ins't shown learly in logs
+		$body['site_url'] = hash('sha512', site_url());
 
 		// Images, if any.
 		$body['icon_urls'] = $this->get_plugin_images('icon', dirname($plugin));
@@ -395,7 +396,7 @@ class UpdateClient {
 
 		// Assemble args to post back to the Update Manager plugin.
 		$options = [
-			'user-agent' => 'ClassicPress/'.$cp_version.'; '.get_bloginfo('url'),
+			'user-agent' => 'ClassicPress/'.$cp_version,
 			'body'       => $body,
 			'timeout'    => 20,
 		];
