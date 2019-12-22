@@ -24,8 +24,11 @@
  * -----------------------------------------------------------------------------
  */
 
-// EDIT HERE: Make this unique. Example: YourDevName\YourPluginName;
+// EDIT: Make this unique. Example: YourDevName\YourPluginName;
 namespace CodePotent\UpdateManager;
+
+// EDIT: URL where Update Manager is installed; with trailing slash!
+const UPDATE_SERVER = 'https://codepotent.com/';
 
 // Prevent direct access.
 if (!defined('ABSPATH')) {
@@ -46,14 +49,24 @@ if (!defined('ABSPATH')) {
  */
 class UpdateClient {
 
+	// Instance of the object.
+	private static $instance = null;
+
 	// Object config data.
 	private $config;
 
-	// Default value for CP latest version.
+	/**
+	 * Default CP version.
+	 *
+	 * This value is used for comparison in the updates list table by core. This
+	 * property can be set to 4.9.x (whatever x might be at the time,) if you're
+	 * wanting to be exact. The issue with doing that is that you'd have to bump
+	 * that number with every new release of 4.9.x to ensure that core indicates
+	 * 100% compatibility in the table. If your plugin is compatible with 4.9.x,
+	 * it is compatible with ClassicPress 1.x.x, so, there shouldn't be any need
+	 * for this. Setting it to 4.9.99 ensures you don't have to update it again.
+	 */
 	private $cp_latest_version = '4.9.99';
-
-	// Instance of the object.
-	private static $instance = null;
 
 	/**
 	 * Constructor.
@@ -68,18 +81,19 @@ class UpdateClient {
 
 		// Configure the update object.
 		$this->config = [
-			// EDIT HERE: The URL where your Update Manager plugin is installed.
-			'server' => 'https://codepotent.com/',
-			// Leave as-is.
+			// The URL where your Update Manager plugin is installed.
+			'server' => UPDATE_SERVER,
+			// Leave as-is; may add support for theme updates later.
 			'type' => 'plugin',
-			// Leave as-is. This is plugin-dir/plugin-file.php
-			'id' => basename(dirname(__DIR__)).'/'.basename(dirname(__DIR__)).'.php',
+			// Plugin identifier; ie, plugin-folder/plugin-file.php.
+			'id' => $this->get_plugin_identifier(),
 			// Leave as-is.
 			'api' => '1.0.0',
-			// Leave as-is – unless you really know what you're doing. ;)
+			// Leave as-is – tutorial can be created with enough interest.
 			'post' => [],
 		];
 
+		// Find and store the latest CP version during update process.
 		$this->cp_latest_version = get_option('cp_latest_version', '');
 
 		// Hook the plugin into the system.
@@ -102,7 +116,7 @@ class UpdateClient {
 	public static function get_instance() {
 
 		// Check for existing instance or get a new one.
-		if (self::$instance===null) {
+		if (self::$instance === null) {
 			self::$instance = new self;
 		}
 
@@ -124,6 +138,9 @@ class UpdateClient {
 
 		// Print footer scripts; see comments on the method.
 		add_action('admin_print_footer_scripts', [$this, 'print_admin_scripts']);
+		
+		// Filter the plugin admin row.
+		add_filter('plugin_row_meta', [$this, 'filter_plugin_row_meta'], 10, 2);
 
 		// Filter plugin update data into the transient before saving.
 		add_filter('pre_set_site_transient_update_plugins', [$this, 'filter_plugin_update_transient']);
@@ -161,8 +178,12 @@ class UpdateClient {
 
 		// Only need this JS/CSS on the plugin admin page and updates page.
 		if ($screen->base === 'plugins' || $screen->base === 'plugin-install') {
+			// This will make the jQuery below work with various languages.
+			$text1 = esc_html__('Compatible up to:');
+			$text2 = esc_html__('Reviews');
+			$text3 = esc_html__('Read all reviews');
 			// Swap "Compatible up to: 4.9.99" with "Compatible up to: 1.1.1".
-			echo '<script>jQuery(document).ready(function($){$("ul li:contains(4.9.99)").html("<strong>'.esc_html__('Compatible up to:').'</strong> '.$this->cp_latest_version.'");$(".fyi h3:contains(Reviews)").hide();$(".fyi p:contains(Read all reviews)").hide();});</script>'."\n";
+			echo '<script>jQuery(document).ready(function($){$("ul li:contains(4.9.99)").html("<strong>'.$text1.'</strong> '.$this->cp_latest_version.'");$(".fyi h3:contains('.$text2.')").hide();$(".fyi p:contains('.$text3.')").hide();});</script>'."\n";
 			// Styles for the modal window.
 			echo '<style>'."\n";
 			// Hide the ratings text and links to WP.org reviews.
@@ -175,10 +196,14 @@ class UpdateClient {
 			echo '#plugin-information-title.with-banner{background-size:100% 100%;background-repeat:no-repeat;background-position-x:center;background-position-y:center;background-color:#333;}'."\n";
 			// Add space above stars.
 			echo '#plugin-information #section-holder #section-reviews .star-rating {margin:15px 0 0 0;}'."\n";
-			// Add space below review text.
-			echo '#section-reviews p{margin:0;padding-bottom:25px;}'."\n";
-			// Add border between reviews.
-			echo '#section-reviews p:not(:last-child){border-bottom:1px solid #f2f2f2;}'."\n";
+			// Add divider below review text.
+			echo '#section-reviews p{margin:0;padding-bottom:25px;border-bottom:1px solid #f2f2f2;}'."\n";
+			// Lighten paragraph text for screenshot captions.
+			echo '#section-screenshots div{margin:0 0 50px;color:#777;}'."\n";
+			// Empasize bold text in screenshot captions.
+			echo '#section-screenshots div strong{color:#494949;}'."\n";
+			// Add border to screenshots.
+			echo '#section-screenshots img{padding:3px;border:1px solid #ccc;}'."\n";
 			// And close up.
 			echo '</style>'."\n";
 		}
@@ -214,7 +239,6 @@ class UpdateClient {
 
 					// If icons are found, add their urls to the $data.
 					$icons = [];
-					//$plugin = dirname($this->config['id']);
 					if (!empty($icons = $this->get_plugin_images('icon', dirname($plugin)))) {
 						$data['icons'] = $icons;
 					}
@@ -239,11 +263,11 @@ class UpdateClient {
 					// If no new version, no update. Unset the entry.
 					unset($value->response[$plugin]);
 
-				}
+				} // if/else
 
-			}
+			} // foreach $installed_plugins
 
-		}
+		} // isset($value->response)
 
 		// Return the updated transient value.
 		return $value;
@@ -293,6 +317,35 @@ class UpdateClient {
 	}
 
 	/**
+	 * Filter plugin row meta.
+	 *
+	 * A method to add a "View Details" link to the plugin's admin row item.
+	 *
+	 * @author John Alarcon
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param array $plugin_meta Array of metadata (links, typically)
+	 * @param string $plugin_file Ex: plugin-folder/plugin-file.php
+	 * @return array $plugin_meta with an added link.
+	 */
+	public function filter_plugin_row_meta($plugin_meta, $plugin_file) {
+
+		// Add the link to the plugin's own row, if not already existing.
+		if ($this->identifier === $plugin_file) {
+			$anchors_string = implode('', $plugin_meta);
+			$anchor_text = esc_html('View details', 'codepotent-update-manager');
+			if (!preg_match('|(\<a[ \s\S\d]*)('.$anchor_text.')(<\/a>)|', $anchors_string)) {
+				$plugin_meta[] = '<a class="thickbox" href="'.admin_url('/plugin-install.php?tab=plugin-information&plugin='.$this->server_slug.'&TB_iframe=true&width=600&height=550').'">'.$anchor_text.'</a>';
+			}
+		}
+
+		// Return the maybe amended links.
+		return $plugin_meta;
+
+	}
+
+	/**
 	 * Filter post-installer.
 	 *
 	 * @author John Alarcon
@@ -328,29 +381,66 @@ class UpdateClient {
 
 		// What?! Oh, updating a plugin? Sweet.
 		if ($hook_suffix === 'update') {
-
 			// Got both of the needed arguments?
 			if (isset($_GET['action'], $_GET['plugin'])) {
-
 				// First argument is good?
 				if ($_GET['action'] === 'upgrade-plugin') {
-
 					// Next argument is good?
 					if ($_GET['plugin'] === $hook_extra['plugin']) {
-
 						// Activate the plugin.
 						activate_plugin($hook_extra['plugin']);
-
 					}
-
 				}
-
 			}
-
 		}
 
 		// Return the response unaltered.
 		return $response;
+
+	}
+
+	/**
+	 * Get plugin identifier.
+	 *
+	 * The plugin identifier (ie, plugin-folder/plugin-file.php) will differ for
+	 * different implementations. This method is a reliable way to determine the
+	 * directory name and primary PHP file of the plugin, without any assumption
+	 * of where this file may exist.
+	 *
+	 * @author John Alarcon
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return string Plugin identifier; ie, plugin-folder/plugin-file.php
+	 */
+	private function get_plugin_identifier() {
+
+		// Gain access the get_plugins() function.
+		include_once(ABSPATH.'/wp-admin/includes/plugin.php');
+
+		// Get path to plugin dir and this file; make consistent the slashes.
+		$dir = explode('/', str_replace('\\', '/', WP_PLUGIN_DIR));
+		$file = explode('/', str_replace('\\', '/', __FILE__));
+
+		// Strip plugin dir parts, leaving this plugin's directory at $diff[0].
+		$diff = array_diff($file, $dir);
+
+		// This plugin's directory name.
+		$this->server_slug = $dir_name = array_shift($diff);
+
+		// Initialization.
+		$identifier = '';
+
+		// Find the plugin id that matches the directory name.
+		foreach (array_keys(get_plugins()) as $id) {
+			if (strpos($id, $dir_name.'/') === 0) {
+				$this->identifier = $identifier = $id;
+				break;
+			}
+		}
+
+		// Return the identifier.
+		return $identifier;
 
 	}
 
@@ -380,6 +470,8 @@ class UpdateClient {
 		} else if ($action === 'query_plugins') {
 			// If querying for all plugins, assign them to the post body.
 			$body['plugins'] = get_plugins();
+		} else {
+			return [];
 		}
 
 		// Site URL; allows for particular URLs to test updates before pushing.
@@ -389,9 +481,6 @@ class UpdateClient {
 		$body['icon_urls'] = $this->get_plugin_images('icon', dirname($plugin));
 		$body['banner_urls'] = $this->get_plugin_images('banner', dirname($plugin));
 		$body['screenshot_urls'] = $this->get_plugin_images('screenshot', dirname($plugin));
-
-		// The directory where banners and icons are stored.
-		$body['image_url'] = untrailingslashit(WP_PLUGIN_URL).'/'.dirname($this->config['id']).'/images';
 
 		// Assemble args to post back to the Update Manager plugin.
 		$options = [
@@ -489,7 +578,7 @@ class UpdateClient {
 			}
 			// Ok, no svg. How about png or jpg?
 			else {
-				// This loop favors png.
+				// This loop doesn't break early, so, it favors png.
 				foreach (['jpg', 'png'] as $ext) {
 					// Pop keys off the end of the $images_qualities array.
 					$all_keys   = $image_qualities[$type];
@@ -506,9 +595,9 @@ class UpdateClient {
 						$images[$last_key] = $image_url.'/'.$type.'-'.$image_dimensions[$type][$last_key].'.'.$ext;
 					}
 
-				}
+				} // foreach
 
-			} // if/else
+			} // inner if/else
 
 			// Return icon or banner URLs.
 			return $images;
@@ -583,7 +672,7 @@ class UpdateClient {
 					}
 				}
 			}
-		} // ie, $version = 1.1.1.json
+		} // At this point, $version = 1.1.1.json
 
 		// Get just the version.
 		if ($version) {

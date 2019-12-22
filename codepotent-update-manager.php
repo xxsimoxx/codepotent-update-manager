@@ -4,7 +4,7 @@
  * -----------------------------------------------------------------------------
  * Plugin Name: Update Manager
  * Description: Painlessly push updates to your ClassicPress plugin users! Serve updates from GitHub, your own site, or somewhere in the cloud. 100% integrated with the ClassicPress update process; slim and performant.
- * Version: 1.0.0-rc1
+ * Version: 1.0.0-rc2
  * Author: Code Potent
  * Author URI: https://codepotent.com
  * Plugin URI: https://codepotent.com/classicpress/plugins
@@ -72,6 +72,9 @@ class UpdateManager {
 		// Register the autoload method.
 		spl_autoload_register(__CLASS__.'::autoload_classes');
 
+		// Register privacy page content.
+		add_action('admin_init', [$this, 'register_privacy_disclosure']);
+		
 		// Enqueue backend scripts.
 		add_action('admin_enqueue_scripts', [$this, 'enqueue_admin_scripts']);
 
@@ -85,8 +88,14 @@ class UpdateManager {
 		add_filter('plugin_action_links_'.PLUGIN_IDENTIFIER, [$this, 'filter_plugin_action_links']);
 
 		// Replace footer text with plugin name and version info.
-		add_filter('admin_footer_text', [$this, 'filter_footer_text'], 10000);
+		add_filter('admin_footer_text', [$this, 'filter_footer_text'], PHP_INT_MAX);
 
+		// Plugin upgrade.
+		add_action('upgrader_process_complete', [$this, 'upgrade_plugin'], 10, 2);
+		
+		// Convert post types after upgrade, if necessary.
+		add_action('registered_post_type', [$this, 'update_cpt_identifiers']);
+		
 		// Plugin activation.
 		register_activation_hook(__FILE__, [$this, 'activate_plugin']);
 
@@ -103,7 +112,103 @@ class UpdateManager {
 		UpdateClient::get_instance();
 
 	}
-
+	
+	/**
+	 * Privacy disclosure.
+	 *
+	 * This method creates a custom section on the core Privacy page to describe
+	 * which data is received by the Update Manager plugin and how it used used.
+	 * This method does not add anything to the actual Privacy Policy.
+	 *
+	 * @author John Alarcon
+	 *
+	 * @since 1.0.0
+	 */
+	public function register_privacy_disclosure() {
+		
+		// Description of data collected.
+		$content = sprintf(
+				esc_html__('
+						
+			%1$sWhat data is received and how is it used?%2$s
+						
+			When a remote plugin queries for information from the Update Manager
+			plugin, the following data is sent along with the request:
+						
+			%3$s
+				%5$sThe plugin identifier (i.e., plugin-folder/plugin-file.php)
+					is a unique identifier that ensures you get the correct data.%6$s
+				%5$sThe URL making the request is needed for queries when the
+					endpoint is in Pending status; for whitelisting.%6$s
+				%5$sThe URL to the local assets, if any; these are URLs to the
+					banner, icon, and screenshots used in the various views.%6$s
+				%5$sThe data from plugin headers provides version information;
+					for determining if an update is available.%6$s
+			%4$s
+						
+			', 'codepotent-update-manager'),
+				'<h3>',
+				'</h3>',
+				'<ol>',
+				'</ol>',
+				'<li>',
+				'</li>'
+				);
+		
+		// Example text for a Privacy Policy entry.
+		$content .= sprintf(
+				esc_html__('
+						
+			%1$sExample Text for Privacy Policy%2$s
+						
+			%3$sNOTE%4$s: %5$sThe following text is not legal advice and should
+			not be taken as such. It is merely a suggestion of how one might go
+			about disclosing to end users the data that is received and how it
+			is used by the Update Manager plugin. If collecting more information
+			or storing any data, it would likely require additional disclosures
+			to ensure compliance with GDPR.%6$s
+						
+			%7$sIn an effort to keep you up to date with latest developments, we
+			will periodically make updates available for our plugins. When your
+			site checks in for updates, your URL is sent along with the request.
+			This allows us to whitelist certain domains to get updates early,
+			allowing for test-runs to make sure there are no issues, before
+			rolling out the update to all users. Additionally, if the plugin
+			contains image assets such as a banner, icon, or screenshots, those
+			URLs will also be transmitted with the request. These URLs are added
+			to the latest data (in memory) and reflected back to your site as a
+			data array that the core system can use to populate the various
+			related views. This allows images to be served from your own server,
+			speeding up the process a bit. Finally, the data from the header
+			section of plugin files is transmitted to help in the determination
+			of whether an update is available or not. All data sent withing the
+			request is used on a per-request basis and is not stored in any way.
+			However, while no transmitted data is stored, requests to a server
+			will generally be captured by server access/error logs. Data may
+			also be stored in other ways, such as in the logs of a security or
+			auditing plugin. The duration of such logged data is subject to the
+			policies under which the data was collected and stored and may be
+			outside our control.%8$s
+						
+			', 'codepotent-update-manager'),
+				'<h3>',
+				'</h3>',
+				'<strong>',
+				'</strong>',
+				'<em style="color:#f00;">',
+				'</em>',
+				'<p>',
+				'</p>'
+				);
+		
+		// Paragraph it up.
+		$content = wpautop($content, false);
+		
+		// Add the content to the system.
+		wp_add_privacy_policy_content(PLUGIN_NAME, $content);
+		
+	}
+	
 	/**
 	 * Enqueue admin scripts.
 	 *
@@ -199,7 +304,7 @@ class UpdateManager {
 	public function filter_plugin_action_links($links) {
 
 		// Add a link to the plugin update manager.
-		$links['plugin_endpoint'] = '<a href="'.admin_url('edit.php?post_type='.CPT_FOR_PLUGIN_REPOS).'">'.esc_html__('Manage Endpoints', 'codepotent-update-manager').'</a>';
+		$links['plugin_endpoint'] = '<a href="'.admin_url('edit.php?post_type='.CPT_FOR_PLUGIN_ENDPOINTS).'">'.esc_html__('Manage Endpoints', 'codepotent-update-manager').'</a>';
 
 		// Return all the things.
 		return $links;
@@ -225,7 +330,7 @@ class UpdateManager {
 		$screen = get_current_screen();
 
 		// Are we on this post type's screen? If so, change the footer text.
-		if ($screen->post_type === CPT_FOR_PLUGIN_REPOS) {
+		if ($screen->post_type === CPT_FOR_PLUGIN_ENDPOINTS) {
 			$text = '<span id="footer-thankyou"><a href="'.CODE_POTENT_HOME_URL.'/classicpress/plugins/" title="'.CODE_POTENT_TITLE_ALT.'">'.PLUGIN_NAME.'</a> '.PLUGIN_VERSION.' — A <a href="'.CODE_POTENT_HOME_URL.'" title="'.CODE_POTENT_TITLE_ALT.'"><img src="'.CODE_POTENT_LOGO_SVG_WORDS.'" alt="'.CODE_POTENT_TITLE_ALT.'" style="height:1em;vertical-align:sub;"></a> Production</span>';
 		}
 
@@ -245,8 +350,15 @@ class UpdateManager {
 	 */
 	public function activate_plugin() {
 
-		// Nothing to do here at this time.
-
+		// Bring database object into scope.
+		global $wpdb;
+		
+		// Convert guids to new CPT identifier.
+		$wpdb->query("UPDATE $wpdb->posts SET guid = REPLACE(guid, 'plugin_repo', '".CPT_FOR_PLUGIN_ENDPOINTS."');");
+		
+		// Convert old CPT identifiers to new CPT identifier.
+		$wpdb->query("UPDATE $wpdb->posts SET post_type = REPLACE(post_type, 'plugin_repo', '".CPT_FOR_PLUGIN_ENDPOINTS."');");
+		
 	}
 
 	/**
@@ -265,6 +377,63 @@ class UpdateManager {
 	}
 
 	/**
+	 * Plugin upgrade.
+	 *
+	 * This method sets a transient denoting that the plugin was just upgraded.
+	 *
+	 * @author John Alarcon
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param object $upgrader_object The upgrader object.
+	 * @param array $args Arguments from the upgrade process.
+	 */
+	public function upgrade_plugin($upgrader_object, $args) {
+		
+		// Not dealing with a plugin update? Bail.
+		if ($args['action'] !== 'update' || $args['type'] !== 'plugin') {
+			return;
+		}
+		
+		// The Update Manager plugin wasn't just updated? Bail.
+		if (!in_array(PLUGIN_IDENTIFIER, $args['plugins'], true)) {
+			return;
+		}
+		
+		// Set a transient to flag that plugin was upgraded.
+		set_transient(PLUGIN_IDENTIFIER.'_upgraded', 1, 60);
+
+	}
+
+	/**
+	 * Update custom post types, if needed.
+	 *
+	 * This method deactivates and reactivates the plugin. This converts the RC1
+	 * post types to RC2.
+	 *
+	 * @author John Alarcon
+	 *
+	 * @since 1.0.0
+	 */
+	public function update_cpt_identifiers() {
+		
+		// No transient indicating plugin was just updated? Bail.
+		if (!get_transient(PLUGIN_IDENTIFIER.'_upgraded')) {
+			return;
+		}
+		
+		// Deactivate the plugin.
+		deactivate_plugins(PLUGIN_IDENTIFIER);
+		
+		// Reactivate the plugin; this converts RC1 post types to RC2.
+		activate_plugins(PLUGIN_IDENTIFIER);
+		
+		// All done; delete the transient.
+		delete_transient(PLUGIN_IDENTIFIER.'_upgraded');
+		
+	}
+	
+	/**
 	 * Plugin uninstallation/deletion.
 	 *
 	 * This method is included for completeness.
@@ -274,13 +443,30 @@ class UpdateManager {
 	 * @since 1.0.0
 	 */
 	public static function uninstall_plugin() {
-
-		// TODO: Add a confirmation dialog before performing the following.
-
-		// Delete CPTs.
-		// Delete meta.
-		// Delete options.
-
+		
+		// Make sure the plugin's constants are available.
+		if (!defined(__NAMESPACE__.'\PLUGIN_VERSION')) {
+			require_once('/includes/constants.php');
+		}
+		
+		// Get ids for all CPT items created by the plugin.
+		$posts = get_posts([
+				'post_type'      => CPT_FOR_PLUGIN_ENDPOINTS,
+				'post_status'    => ['draft', 'pending', 'publish', 'trash'],
+				'posts_per_page' => -1,
+				'fields'         => 'ids'
+		]);
+		
+		// Delete posts, metadata, comments, all in one-fell-swoop.
+		if (!is_wp_error($posts) && !empty($posts)) {
+			foreach ($posts as $post) {
+				wp_delete_post($post->ID, true);
+			}
+		}
+		
+		// Delete options set by the plugin.
+		delete_option('cp_latest_version');
+		
 	}
 
 	/**

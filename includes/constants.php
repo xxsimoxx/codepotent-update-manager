@@ -45,7 +45,7 @@ const PLUGIN_NAME = 'Update Manager';
 // Plugin version number.
 const PLUGIN_VERSION = '1.0.0';
 // Plugin directory name; ie, codepotent-plugin-name
-define(__NAMESPACE__.'\PLUGIN_DIRNAME', basename(dirname(__FILE__, 2)));
+define(__NAMESPACE__.'\PLUGIN_DIRNAME', substr(str_replace('\\', '/', dirname(__DIR__)), strrpos(str_replace(['\\', '/'], '/', dirname(__DIR__)), '/')+1));
 // Plugin file name; ie, codepotent-plugin-name.php
 const PLUGIN_FILENAME = PLUGIN_DIRNAME.'.php';
 // Plugin slug, long; ie, codepotent-my-plugin-name.
@@ -85,7 +85,7 @@ const PLUGIN_REPO_URL = 'https://github.com/'.VENDOR_PREFIX.'/'.PLUGIN_SLUG_SHOR
 // Primary query variable for the JSON endpoints.
 const ENDPOINT_VARIABLE = 'update';
 // Custom post type for plugin update endpoints.
-const CPT_FOR_PLUGIN_REPOS = 'plugin_repo';
+const CPT_FOR_PLUGIN_ENDPOINTS = 'plugin_endpoint';
 
 // -----------------------------------------------------------------------------
 // PATHS

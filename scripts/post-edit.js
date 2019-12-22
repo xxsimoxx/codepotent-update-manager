@@ -22,7 +22,7 @@
 // Wait until the page has loaded.
 jQuery(document).ready(function($) {
 	
-	// Click handler for inserting template text.
+	// Click handler for inserting template text via button.
 	$('#'+slug+'-autocompleters button').click(function (e) {
 		// Prevent default link behavior.
 		e.preventDefault();
@@ -46,7 +46,7 @@ jQuery(document).ready(function($) {
 		return false;
 	});
 	
-	// Click handler for inserting template text.
+	// Click handler for inserting template text via link.
 	$('#'+slug+'-autocompleters a').click(function (e) {
 		// Prevent default link behavior.
 		e.preventDefault();
@@ -69,8 +69,8 @@ jQuery(document).ready(function($) {
 		var text = '';
 		text += '=== PluginNameHere ===\n';
 		text += '\n';
-		text += 'Version:           x.x.x\n';
-		text += 'Requires:          x.x.x\n';
+		text += 'Version:           1.0.0\n';
+		text += 'Requires:          1.0.0\n';
 		text += 'Download link:     https://\n';
 		text += '\n';
 		text += '== Description ==\n';
