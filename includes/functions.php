@@ -49,9 +49,20 @@ function get_request() {
 	// Ensure the raw data can't be used elsewhere.
 	unset($_REQUEST);
 
-	// No requesting URL submitted? Bail.
+	// No requesting URL submitted (ie, RC1)? Get it from user agent instead.
 	if (empty($request['site_url'])) {
-		return [];
+		// User agent messed with? Bail.
+		if (empty($_SERVER['HTTP_USER_AGENT'])) {
+			return [];
+		}
+		// Extract url from string: ClassicPress/x.x.x; https://www.the-site.com
+		$site_url = trim(array_pop(explode(';', $_SERVER['HTTP_USER_AGENT'])));
+		// No URL? Bail.
+		if (empty($site_url) || !filter_var($site_url, FILTER_VALIDATE_URL)) {
+			return [];
+		}
+		// Alrighty, then! Got a URL, clean it up.
+		$request['site_url'] = esc_url($site_url);
 	}
 
 	// Add a nonce.
@@ -59,7 +70,7 @@ function get_request() {
 
 	// Get the endpoint, if it exists, whether published or pending.
 	$endpoint = get_posts([
-		'post_type' => CPT_FOR_PLUGIN_REPOS,
+		'post_type' => CPT_FOR_PLUGIN_ENDPOINTS,
 		'post_status' => ['pending', 'publish'],
 		'posts_per_page' => 1,
 		'meta_key' => 'id',
@@ -74,14 +85,9 @@ function get_request() {
 	// Add the endpoint to the request.
 	$request['endpoint'] = $endpoint;
 
-	// Only whitelisted sites get Pending updates (ie, can test updates.)
-	if ($endpoint[0]->post_status === 'pending') {
-		$can_test_updates = get_allowed_test_urls($endpoint[0]->ID);
-		if (!in_array($request['site_url'], $can_test_updates, true)) {
-			return [];
-		}
-	}
-
+	// Allow for filtering the incoming request.
+	$request = apply_filters(PLUGIN_PREFIX.'_filter_request', $request);
+	
 	// Return the cleansed request.
 	return $request;
 
@@ -204,14 +210,6 @@ function query_plugins() {
 	// Surface the endpoint object.
 	$endpoint = $request['endpoint'];
 
-	// Only whitelisted sites get Pending (ie, can test) updates.
-	if ($endpoint[0]->post_status === 'pending') {
-		$can_test_updates = get_allowed_test_urls($endpoint[0]->ID);
-		if (!in_array($request['site_url'], $can_test_updates, true)) {
-			return [];
-		}
-	}
-
 	// Get plugin data string.
 	$content = get_post_meta($endpoint[0]->ID, $identifier, true);
 
@@ -223,7 +221,6 @@ function query_plugins() {
 	// Parse the plugin data into usable data.
 	$latest = parse_plugin_data($identifier, $endpoint, $request, $content);
 
-	update_option('latest-asdfa', $latest);
 	// Get latest version number, or bail.
 	if (empty($latest['version'])) {
 		return $data;
@@ -250,6 +247,14 @@ function query_plugins() {
 
 	}
 
+	// Only whitelisted sites get Pending (ie, can test) updates.
+	if ($endpoint[0]->post_status === 'pending') {
+		$can_test_updates = get_allowed_test_urls($endpoint[0]->ID);
+		if (!in_array($request['site_url'], $can_test_updates, true)) {
+			$data[$identifier] = [];
+		}
+	}
+	
 	// Return empty array (no update) or populated array (update data) as JSON.
 	return apply_filters(PLUGIN_PREFIX.'_query_plugins', $data, $request);
 
@@ -296,14 +301,6 @@ function plugin_information() {
 		return $data;
 	}
 
-	// Only whitelisted sites get Pending (ie, can test) updates.
-	if ($request['endpoint'][0]->post_status === 'pending') {
-		$can_test_updates = get_allowed_test_urls($request['endpoint'][0]->ID);
-		if (!in_array($request['site_url'], $can_test_updates, true)) {
-			return [];
-		}
-	}
-
 	// Get the plugin textual data.
 	$content = get_post_meta($request['endpoint'][0]->ID, $request['plugin'], true);
 
@@ -315,6 +312,14 @@ function plugin_information() {
 	// Turn the plugin content into usable data.
 	$data = parse_plugin_data($request['plugin'], $request['endpoint'], $request, $content);
 
+	// Only whitelisted sites get links to Pending (ie, can test) updates.
+	if ($request['endpoint'][0]->post_status === 'pending') {
+		$can_test_updates = get_allowed_test_urls($request['endpoint'][0]->ID);
+		if (!in_array($request['site_url'], $can_test_updates, true)) {
+			$data['download_link'] = '';
+		}
+	}
+	
 	// Return the assembled data to the JSON endpoint.
 	return apply_filters(PLUGIN_PREFIX.'_plugin_information', $data, $request);
 
@@ -353,104 +358,196 @@ function parse_plugin_data($identifier, $endpoint, $request, $content) {
 	// Extract the sectional data.
 	$sections = get_sections_data($lines);
 
-
+	// And now, for my next trick... markup all the modal sections!
+	
 	// Get markup for the Description tab.
 	if (!empty($sections['description'])) {
 		$sections['description'] = markup_plugin_generic_section($sections['description']);
 	}
-
+	
 	// Get markup for the FAQ tab.
 	if (!empty($sections['faq'])) {
 		$sections['faq'] = markup_plugin_generic_section($sections['faq']);
 	}
-
+	
 	// Get markup for the Installation tab.
 	if (!empty($sections['installation'])) {
 		$sections['installation'] = markup_plugin_generic_section($sections['installation']);
 	}
-
+	
 	// Get markup for the Screenshots tab.
 	if (!empty($sections['screenshots']) && !empty($request['screenshot_urls'])) {
 		$sections['screenshots'] = markup_plugin_screenshots($request['screenshot_urls'], $sections['screenshots']);
 	} else {
 		unset($sections['screenshots']);
 	}
-
+	
 	// Get markup for the Reviews tab.
 	if (!empty($sections['reviews'])) {
 		$reviews_raw = $sections['reviews'];
 		$sections['reviews'] = markup_plugin_reviews($sections['reviews']);
 	}
-
+	
 	// Get markup for the Other Notes tab.
 	if (!empty($sections['other_notes'])) {
 		$sections['other_notes'] = markup_plugin_generic_section($sections['other_notes']);
 	}
-
+	
 	// Get markup for the Reviews tab.
 	if (!empty($sections['changelog'])) {
 		$sections['changelog'] = markup_plugin_generic_section($sections['changelog']);
 	}
-
+	
 	// Get markup for the Upgrade Notice tab; actually is plaintext.
 	if (!empty($sections['upgrade_notice'])) {
 		$sections['upgrade_notice'] = markup_plugin_upgrade_notice($sections['upgrade_notice']);
 		$data['upgrade_notice'] = $sections['upgrade_notice'];
 	}
-
+	
 	// If update is being tested, show a cautionary note above every section.
 	if ($endpoint[0]->post_status === 'pending') {
-		$targets = get_notification_targets($endpoint[0]->ID);
-		$notice = markup_testing_notice($targets, $identifier, $header);
-		foreach ($sections as $heading=>$content) {
-			$sections[$heading] = $notice.$content;
+		$test_urls = get_allowed_test_urls($endpoint[0]->ID);
+		if (in_array($request['site_url'], $test_urls, true)) {
+			$notice = markup_testing_notice($test_urls, $identifier, $header);
+			foreach ($sections as $heading=>$content) {
+				$sections[$heading] = $notice.$content;
+			}
 		}
 	}
-
-	// And, now, assign all the things.
+	
+	// Flag indicating plugin is not hosted via ClassicPress plugin directory.
 	$data['external']        = true;
+	// Unique identifier; ie, my-plugin-dir/my-plugin-file.php
 	$data['identifier']      = $identifier;
+	// Plugin directory; ie, my-plugin-dir
 	$data['slug']            = dirname($identifier);
+	// Display name for the plugin.
 	$data['name']            = !empty($header['name'])          ? $header['name'] : '';
+	// Plugin description.
 	$data['description']     = !empty($sections['description']) ? $sections['description'] : '';
+	// Plugin version; ie, 1.2.3
 	$data['version']         = !empty($header['version'])       ? $header['version'] : '';
+	// Text domain; ie, my-plugin-name
 	$data['text_domain']     = !empty($header['text_domain'])   ? $header['text_domain'] : '';
+	// Text domain path; ie, /languages
 	$data['domain_path']     = !empty($header['domain_path'])   ? $header['domain_path'] : '';
+	// Minimum PHP requirement; ie, 5.6, or 7, or 7.2, etc
 	$data['requires_php']    = !empty($header['requires_php'])  ? $header['requires_php'] : '';
+	// Minimum ClassicPress requirement; ie, 1.1.1
 	$data['requires']        = !empty($header['requires'])      ? $header['requires'] : '';
+	// Maximum ClassicPress compatibility; ie, 1.1.1
 	$data['tested']          = !empty($header['tested'])        ? $header['tested'] : '';
-	$data['author']          = ''; // Initialization.
+	// Author URL string.
+	$data['author']          = '';
 	if (!empty($header['author_uri']) && !empty($header['author'])) {
 		$data['author']      = '<a href="'.$header['author_uri'].'">'.$header['author'].'</a>';
 	}
+	// Author URL.
 	$data['author_uri']      = !empty($header['author_uri'])    ? $header['author_uri'] : '';
+	// Plugin URL.
 	$data['plugin_uri']      = !empty($header['plugin_uri'])    ? $header['plugin_uri'] : '';
+	// Download link; ie, https://somesite.com/some-file.zip
 	$data['download_link']   = !empty($header['download_link']) ? $header['download_link'] : '';
+	// Donation link; ie, https://pay.me/?now-would-be-nice
 	$data['donate_link']     = !empty($header['donate_link'])   ? $header['donate_link'] : '';
+	// License; ie, GPL v2
 	$data['license']         = !empty($header['license'])       ? $header['license'] : '';
+	// License URL; ie, https://somesite.com/licence.html
 	$data['license_uri']     = !empty($header['license_uri'])   ? $header['license_uri'] : '';
+	// Plugin homepage.
 	$data['homepage']        = !empty($header['plugin_uri'])    ? $header['plugin_uri'] : '';
+	// Plugin last update date; ie, 2019-12-16 15:02:08
 	$data['last_updated']    = $endpoint[0]->post_modified;
+	// Plugin release date; ie, 2019-12-16 15:02:08
 	$data['added']           = $endpoint[0]->post_date;
-	//$data['active_installs'] = 0; // Not currently viable.
+	// Active installs; filterable since active installs aren't counted.
+	$data['active_installs'] = apply_filters(PLUGIN_PREFIX.'_'.$identifier.'_active_installs', 0);
+	if (empty($data['active_installs'])) {
+		unset($data['active_installs']);
+	}
+	// Array of URLs to the banner images for the plugin.
+	$data['banners']         = get_plugin_banners($request);
+	// Array of URLs to the icons images for the plugin.
+	$data['icons']           = get_plugin_icons($endpoint, $identifier);
+	// Compatibility map; is this needed?
+	$data['compatibility']   = [];
+	if (!empty($header['requires'])) {
+		$data['compatibility']   = [
+			$header['requires'] => true
+		];
+	}
+	
+	// Before capturing sections to the data array; add star rating data.
 	if (!empty($sections['reviews'])) {
 		$data['ratings']     = get_plugin_ratings($reviews_raw);
 		$data['num_ratings'] = array_sum($data['ratings']);
 		$data['rating']      = get_plugin_ratings_score($data['ratings'], $data['num_ratings']);
 	}
-	$data['banners']         = get_plugin_banners($request);//['banner_urls'];//\CodePotent\UpdateManager\UpdateClient::get_plugin_images('banner', dirname($identifier));
-	$data['icons']           = get_plugin_icons($endpoint, $identifier);//UpdateClient::get_plugin_images('icon', dirname($identifier));
-	$data['compatibility']   = [];
-	if (!empty($header['requires'])) {
-		$data['compatibility']   = [
-			$header['requires'] => 100 // <------  k/v pair, not assignment
-		];
+	
+	// Place sections at the end; purely for a more visually aesthetic endpoint.
+	$data['sections']        = $sections;
+	
+	// Assignments complete! One final thing left...
+	
+	// Remove certain fields if URL not whitelisted to receive Pending updates.
+	$data = prevent_unauthorized_pending_updates($request, $endpoint, $data);
+	
+	// Finally!
+	return $data;
+
+}
+
+/**
+ * Filter data for Pending updates.
+ *
+ * This function ensures that, when an update endpoint is in Pending status, the
+ * requestors who are whitelisted receive the update data while other requestors
+ * receive a bit less data – basic info only, without triggering an update. This
+ * function defaults, resets, or otherwise nullifies a few $data elements, which
+ * then causes the update to not be found.
+ *
+ * @author John Alarcon
+ *
+ * @since 1.0.0
+ *
+ * @param array $request The incoming request.
+ * @param object $endpoint The endpoint associated with the remote plugin.
+ * @param array $data The full data provided to the update endpoint.
+ * @return array The possibly-amended data array.
+ */
+function prevent_unauthorized_pending_updates($request, $endpoint, $data) {
+	
+	// No endpoint id? Bail.
+	if (empty($endpoint[0]->ID)) {
+		return [];
+	}
+	
+	// Endpoint not in Pending status? Return unaltered data.
+	if ($endpoint[0]->post_status !== 'pending') {
+		return $data;
 	}
 
-	// Capture $sections here at the end to keep them at the end of the array.
-	$data['sections'] = $sections;
+	// Get URLs allowed to have Pending updates.
+	$test_urls = get_allowed_test_urls($endpoint[0]->ID);
+	
+	// Requesting URL is whitelisted for Pending updates? Return unaltered data.
+	if (in_array($request['site_url'], $test_urls, true)) {
+		return $data;
+	}
+		
+	// Alter data to provide info only without update.
+	$data['version'] = $request['version'];
+	$data['requires_php'] = '';
+	$data['requires'] = '';
+	$data['tested'] = '';
+	$data['download_link'] = '';
+	$data['last_updated'] = '';
+	$data['compatibility']   = [];
+	
+	// Unset the (list-table) upgrade notice and its related (modal window) tab.
+	unset($data['upgrade_notice'], $data['sections']['upgrade_notice']);
 
-	// Phew!
+	// Return the data only; no update.
 	return $data;
 
 }
@@ -556,10 +653,10 @@ function get_plugin_banners($request) {
 		}
 	}
 
+	// Return any banner URLs.
 	return $banners;
 
 }
-
 
 /**
  * Recursive tag removal.
@@ -739,10 +836,9 @@ function get_sections_data(&$lines) {
 	$sections = [];
 	// Flag.
 	$started = false;
-// 	debug($lines);
-// 	exit;
+
 	// Iterate over remaining lines.
-	foreach ($lines as $k=>$line) {
+	foreach ($lines as $line) {
 		// Check flag; continue until first actual section.
 		if (!$started && strpos($line, '==') !== 0) {
 			continue;
@@ -769,17 +865,8 @@ function get_sections_data(&$lines) {
 
 	}
 
-	// The long description array may have empty fields; capture the right one.
-// 	foreach ($sections['description'] as $value) {
-// 		if (!empty($value)) {
-// 			$sections['description'] = [];
-// 			$sections['description'][] = $value;
-// 			break;
-// 		}
-// 	}
-
 	// Remove any unexpected sections.
-	foreach ($sections as $heading=>$content) {
+	foreach (array_keys($sections) as $heading) {
 		if (empty($natural_sections[$heading])) {
 			unset($sections[$heading]);
 		}
@@ -804,15 +891,18 @@ function get_sections_data(&$lines) {
  */
 function markup_testing_notice($targets, $identifier, $header) {
 
-	// Create a mail URL, if needed.
+	// Create an email-generating URL, if needed.
 	$args = [];
 	if (!empty($targets['email'])) {
 		$subject = sprintf(
-			'Pending Update Report: %s v%s',
+			esc_html__('Pending Update Report: %s v%s', 'codepotent-update-manager'),
 			$header['name'],
 			$header['version']);
 		$lines = [];
-		$lines[] = 'We greatly appreciate your help and feedback in testing the update to '.$header['name'].' version '.$header['version'].' — thanks!'."\r\n\r\n";
+		$lines[] = sprintf(
+			esc_html__('We greatly appreciate your help and feedback in testing the update to %s version %s — thanks!'),
+			$header['name'],
+			$header['version'])."\r\n\r\n";
 		$body = implode('', $lines);
 		$args[] = array_shift($targets['email']);
 		$args[] = 'subject='.rawurlencode($subject);
@@ -824,19 +914,18 @@ function markup_testing_notice($targets, $identifier, $header) {
 		}
 	}
 
-
 	// Create an HTTP URL, if needed.
 	if (!empty($targets['url'])) {
 		$http_url = array_shift($targets['url']);
 	}
 
+	// Cautionary note regarding this being a testing update.
 	$note1 = sprintf(
 			esc_html__('%sCaution%s: This update is currently undergoing testing &#8211; it is not yet intended for production.', 'codepotent-update-manager'),
 			'<strong>',
-			'</strong>',
-			'<em>'.$header['name'].'</em>');
+			'</strong>');
 
-	// Texts for pointing users toward notifying about issues.
+	// Texts for nudging users toward notifying you about any issues.
 	if (!empty($mail_url) && !empty($http_url)) {
 		$note2 = sprintf(
 			esc_html__('If you experience any issues, please %ssend an email%s or %sreport it here%s.', 'codepotent-update-manager'),
@@ -961,7 +1050,6 @@ function markup_plugin_reviews($reviews) {
 	// Return markup string.
 	return $markup;
 
-
 }
 
 /**
@@ -985,34 +1073,36 @@ function markup_plugin_screenshots($urls, $raw_captions) {
 		return $screenshots;
 	}
 
+	// Allow for a header text.
+	foreach ($raw_captions as $n=>$raw_caption) {
+		if (strpos($raw_caption, '#') === 0) {
+			$screenshots .= Parsedown::instance()->setBreaksEnabled(true)->text($raw_caption);
+			unset($raw_captions[$n]);
+			break;
+		}
+	}
+
 	// Map any found captions to the received URLs.
 	if (!empty($raw_captions)) {
-		foreach ($raw_captions as $raw_caption) {
+		foreach ($raw_captions as $n=>$raw_caption) {
 			if (!empty($raw_caption)) {
 				$captions[(int)$raw_caption] = substr($raw_caption, strpos($raw_caption, ' ')+1);
 			}
 		}
 	}
-//debug($captions);exit;
+
 	// List-item the screenshots.
-	$screenshots = '<ol>'."\n";
 	foreach ((array)$urls as $n=>$file) {
 		$caption = !empty($captions[$n]) ? $captions[$n] : '';
-		$screenshots .= '<li>';
-		$screenshots .= '<img src="'.esc_url($file).'" alt="'.esc_attr($caption).'">';
+		$screenshots .= '<p><img src="'.esc_url($file).'" alt="'.esc_attr($caption).'"></p>';
 		if ($caption) {
-			$screenshots .= '<p>'.esc_html($caption).'</p>';
+			$screenshots .= '<div>'.Parsedown::instance()->setBreaksEnabled(true)->text($caption).'</div>';
 		}
-		$screenshots .= '</li>'."\n";
-
 	}
-	$screenshots .= '</ol>'."\n";
-
-
-	//debug(htmlentities($screenshots));exit;
+	
 	// Return the markup.
 	return $screenshots;
-
+	
 }
 
 /**
@@ -1027,9 +1117,12 @@ function markup_plugin_screenshots($urls, $raw_captions) {
  */
 function markup_plugin_upgrade_notice($notice) {
 
-	if (!is_array($notice)) {
+	// If notice is a string, return it.
+	if (is_string($notice)) {
 		return $notice;
 	}
+	
+	// If notice is an array, trim each line and convert to markup.
 	foreach ($notice as $line) {
 		if (!empty(trim($line))) {
 			$notice = Parsedown::instance()->setBreaksEnabled(true)->line($line);

@@ -73,14 +73,14 @@ class PluginEndpoint {
 		// Register metabox.
 		add_action('add_meta_boxes', [$this, 'register_meta_box_autocompleters']);
 
-		// Update metabox.
+		// Update metaboxes.
 		add_action('save_post', [$this, 'update_meta_box_primary'], 10, 2);
-
+		
 		// Add custom columns.
-		add_filter('manage_'.CPT_FOR_PLUGIN_REPOS.'_posts_columns', [$this, 'filter_columns']);
+		add_filter('manage_'.CPT_FOR_PLUGIN_ENDPOINTS.'_posts_columns', [$this, 'filter_columns']);
 
 		// Populate custom columns.
-		add_action('manage_'.CPT_FOR_PLUGIN_REPOS.'_posts_custom_column', [$this, 'filter_columns_content'], 10, 2);
+		add_action('manage_'.CPT_FOR_PLUGIN_ENDPOINTS.'_posts_custom_column', [$this, 'filter_columns_content'], 10, 2);
 
 	}
 
@@ -97,47 +97,36 @@ class PluginEndpoint {
 
 		// Labels for the post type.
 		$labels = [
-			'name'               => esc_html__('Update Manager',              'codepotent-update-manager'),
-			'singular_name'      => esc_html__('Update Endpoint',             'codepotent-update-manager'),
-			'add_new'            => esc_html__('New Endpoint',                'codepotent-update-manager'),
-			'add_new_item'       => esc_html__('Add New Endpoint',            'codepotent-update-manager'),
-			'edit_item'          => esc_html__('Edit Endpoint',               'codepotent-update-manager'),
-			'new_item'           => esc_html__('New Endpoint',                'codepotent-update-manager'),
-			'all_items'          => esc_html__('All Endpoints',               'codepotent-update-manager'),
-			'view_item'          => esc_html__('View Endpoint',               'codepotent-update-manager'),
-			'search_items'       => esc_html__('Search Endpoints',            'codepotent-update-manager'),
-			'not_found'          => esc_html__('No Endpoints found',          'codepotent-update-manager'),
-			'not_found_in_trash' => esc_html__('No Endpoints found in Trash', 'codepotent-update-manager'),
-			'menu_name'          => esc_html__('Update Manager',              'codepotent-update-manager'),
+			'name'                => esc_html__('Update Manager &#8211; Plugins', 'codepotent-update-manager'),
+			'singular_name'       => esc_html__('Plugin Endpoint',                'codepotent-update-manager'),
+			'add_new'             => esc_html__('New Plugin',                     'codepotent-update-manager'),
+			'add_new_item'        => esc_html__('Add New Plugin',                 'codepotent-update-manager'),
+			'edit_item'           => esc_html__('Edit Plugin',                    'codepotent-update-manager'),
+			'new_item'            => esc_html__('New Plugin',                     'codepotent-update-manager'),
+			'all_items'           => esc_html__('All Plugins',                    'codepotent-update-manager'),
+			'view_item'           => esc_html__('View Plugin',                    'codepotent-update-manager'),
+			'search_items'        => esc_html__('Search Plugins',                 'codepotent-update-manager'),
+			'not_found'           => esc_html__('No Plugins found',               'codepotent-update-manager'),
+			'not_found_in_trash'  => esc_html__('No Plugins found in Trash',      'codepotent-update-manager'),
+			'menu_name'           => esc_html__('Update Manager',                 'codepotent-update-manager'),
 		];
 
 		// Arguments for the post type.
 		$args = [
-			'description'         => '',
-			'public'              => false,
-			'publicly_queryable'  => false,
-			'show_in_nav_menus'   => false,
-			'show_in_admin_bar'   => false,
-			'exclude_from_search' => true,
-			'show_ui'             => true,
-			'show_in_menu'        => true,
-			'menu_position'       => apply_filters(PLUGIN_PREFIX.'_menu_pos', 1),
-			'menu_icon'           => 'dashicons-update',
-			'can_export'          => true,
-			'delete_with_user'    => false,
-			'hierarchical'        => false,
-			'has_archive'         => false,
-			'query_var'           => false,
-			'rewrite'             => false,
-			'supports'            => ['title'],
-			'labels'              => $labels,
+			'public'        => false,
+			'show_ui'       => true,
+			'menu_position' => apply_filters(PLUGIN_PREFIX.'_menu_pos', null),
+			'menu_icon'     => 'dashicons-update',
+			'rewrite'       => false,
+			'supports'      => ['title'],
+			'labels'        => $labels,
 		];
 
 		// Last call!
-		$args = apply_filters(CPT_FOR_PLUGIN_REPOS.'_post_type_args', $args);
+		$args = apply_filters(CPT_FOR_PLUGIN_ENDPOINTS.'_post_type_args', $args);
 
 		// Register the post type.
-		register_post_type(CPT_FOR_PLUGIN_REPOS, $args);
+		register_post_type(CPT_FOR_PLUGIN_ENDPOINTS, $args);
 
 	}
 
@@ -158,7 +147,7 @@ class PluginEndpoint {
 	public function filter_cpt_title_placeholder($placeholder, $post) {
 
 		// Dealing with this plugin's CPT? Swap the text!
-		if (get_post_type($post) === CPT_FOR_PLUGIN_REPOS) {
+		if (get_post_type($post) === CPT_FOR_PLUGIN_ENDPOINTS) {
 			$placeholder = esc_html__('Plugin Name or Title', 'codepotent-update-manager');
 		}
 
@@ -184,7 +173,7 @@ class PluginEndpoint {
 	public function filter_post_row_actions($actions, $post) {
 
 		// Dealing with this plugin's CPT? Add links!
-		if (get_post_type() === CPT_FOR_PLUGIN_REPOS) {
+		if (get_post_type() === CPT_FOR_PLUGIN_ENDPOINTS) {
 			if ($post->post_status === 'publish' || $post->post_status === 'pending') {
 				$plugin_identifier = get_post_meta($post->ID, 'id', true);
 				$actions['endpoint'] = '<a href="'.site_url().'?'.ENDPOINT_VARIABLE.'=plugin_information&plugin='.$plugin_identifier.'&site_url='.site_url().'">'.esc_html__('View Endpoint', 'codepotent-update-manager').'</a>';
@@ -211,7 +200,7 @@ class PluginEndpoint {
 			PLUGIN_SLUG.'-primary-editor',
 			esc_html__('Endpoint Details', 'codepotent-update-manager'),
 			[$this, 'render_meta_box_primary'],
-			[CPT_FOR_PLUGIN_REPOS],
+			[CPT_FOR_PLUGIN_ENDPOINTS],
 			'normal',
 			'high'
 			);
@@ -271,17 +260,17 @@ class PluginEndpoint {
 		echo '		<tr>'."\n";
 		echo '			<th scope="row"><label for="'.PLUGIN_SLUG.'-editor">'.esc_html__('Plugin Details', 'codepotent-update-manager').'</label></th>'."\n";
 		echo '			<td>'."\n";
+		echo '				<p>';
+		echo '					<textarea class="widefat" rows="80" name="'.PLUGIN_PREFIX.'_editor" id="'.PLUGIN_SLUG.'-editor">'.esc_textarea($content).'</textarea>';
+		echo '				</p>'."\n";
 		echo '				<p class="description">';
 		echo sprintf(
-				esc_html__('Describe the plugin as if writing a %sreadme.txt%s file for it. HTML is not allowed, but, basic %smarkdown%s is supported. Save time by using the Auto Complete options! %s', 'codepotent-update-manager'),
+			esc_html__('Describe the plugin as if writing a %sreadme.txt%s file for it. Basic %smarkdown%s is supported. HTML is stripped.', 'codepotent-update-manager'),
 				'<a href="https://developer.wordpress.org/plugins/wordpress-org/how-your-readme-txt-works/">',
 				'</a>',
 				'<a href="https://github.com/adam-p/markdown-here/wiki/Markdown-Cheatsheet">',
-				'</a>',
-				'<span class="dashicons dashicons-arrow-right-alt"></span>');
-		echo '</p>'."\n";
-		echo '				<p>';
-		echo '					<textarea class="widefat" rows="20" name="'.PLUGIN_PREFIX.'_editor" id="'.PLUGIN_SLUG.'-editor">'.esc_textarea($content).'</textarea>';
+			'</a>'
+			);
 		echo '				</p>'."\n";
 		echo '			</td>'."\n";
 		echo '		</tr>'."\n";
@@ -290,8 +279,6 @@ class PluginEndpoint {
 		echo '		<tr>'."\n";
 		echo '			<th scope="row"><label for="'.PLUGIN_SLUG.'-test-urls">'.esc_html__('Testing Domains', 'codepotent-update-manager').'</label></th>'."\n";
 		echo '			<td>'."\n";
-// 		echo '				<p class="description">';
-// 		echo '</p>'."\n";
 		echo '				<p>';
 		echo '					<textarea class="widefat" rows="5" name="'.PLUGIN_PREFIX.'_test_urls" id="'.PLUGIN_SLUG.'-test-urls">'.esc_textarea($test_urls).'</textarea>';
 		echo '				</p>'."\n";
@@ -302,7 +289,7 @@ class PluginEndpoint {
 				'</code>');
 		echo '&nbsp;';
 		echo sprintf(
-			esc_html__('URLs must point to the root of a ClassicPress installation. A couple examples might be: %1$shttps://www.yoursite.com%2$s or %1$shttps://www.yoursite.com/your/path/to/classicpress%2$s. The plugin related to this endpoint must also be installed there, whether active or inactive.', 'codepotent-update-manager'),
+				esc_html__('URLs must point to the root of a ClassicPress installation. A couple examples might be: %1$shttps://www.yoursite.com%2$s or %1$shttps://www.yoursite.com/your/path/to/classicpress%2$s. The plugin related to this endpoint must also be installed there, whether active or inactive.', 'codepotent-update-manager'),
 				'<code>',
 				'</code>');
 		echo '</p>'."\n";
@@ -318,17 +305,12 @@ class PluginEndpoint {
 		echo '				</p>'."\n";
 		echo '				<p class="description">';
 		echo sprintf(
-				esc_html__('
-In case of issues, give your testers the means to make contact. You can add multiple email addresses and a URL, separated by commas.
- This creates a link that prepopulates an email and/or a link to a specific page for reporting issues.
-
-', 'codepotent-update-manager'),
+			esc_html__('In case of issues, give your testers the means to make contact. You can add multiple email addresses and a URL, separated by commas. This creates a link that prepopulates an email and/or a link to a specific page for reporting issues.', 'codepotent-update-manager'),
 				'<code>',
 				'</code>');
 		echo '</p>'."\n";
 		echo '			</td>'."\n";
 		echo '		</tr>'."\n";
-
 
 		// Close table.
 		echo '	</tbody>'."\n";
@@ -378,7 +360,7 @@ In case of issues, give your testers the means to make contact. You can add mult
 		}
 
 		// Not a post of this type? Bail.
-		if ($post->post_type !== CPT_FOR_PLUGIN_REPOS) {
+		if ($post->post_type !== CPT_FOR_PLUGIN_ENDPOINTS) {
 			return $post_id;
 		}
 
@@ -393,14 +375,14 @@ In case of issues, give your testers the means to make contact. You can add mult
 		// Plugin identifier.
 		$new_identifier = isset($request[PLUGIN_PREFIX.'_plugin_id']) ? sanitize_text_field($request[PLUGIN_PREFIX.'_plugin_id']) : '';
 
+		// Ensure data stays in sync if identifier changes.
 		if ($new_identifier !== $identifier) {
 			// Update the identifier's meta entry.
 			update_post_meta($post_id, 'id', $new_identifier);
-			// Update the primary content's meta enty to stay in sync.
+			// Update the primary content's meta entry to stay in sync.
 			$meta = get_post_meta($post_id, $identifier, true);
 			update_post_meta($post_id, $new_identifier, $meta);
 			delete_post_meta($post_id, $identifier, $meta);
-
 		}
 
 		// Update content.
@@ -440,7 +422,7 @@ In case of issues, give your testers the means to make contact. You can add mult
 		return $post_id;
 
 	}
-
+	
 	/**
 	 * Register auto-completers metabox.
 	 *
@@ -451,12 +433,13 @@ In case of issues, give your testers the means to make contact. You can add mult
 	 * @since 1.0.0
 	 */
 	public function register_meta_box_autocompleters() {
-		// Add metabox to primary area.
+
+		// Add sidebar metabox.
 		add_meta_box(
 			PLUGIN_SLUG.'-autocompleters',
 			esc_html__('Auto Complete', 'codepotent-update-manager'),
 			[$this, 'render_meta_box_autocompleters'],
-			[CPT_FOR_PLUGIN_REPOS],
+			[CPT_FOR_PLUGIN_ENDPOINTS],
 			'side',
 			'default'
 			);
@@ -518,12 +501,12 @@ In case of issues, give your testers the means to make contact. You can add mult
 
 		// No unsets; just redo the columns and return.
 		return [
-			'cb'            => '<input type="checkbox" />',
-			'title'         => esc_html__('Plugin',     'codepotent-update-manager'),
+			'cb'            => '<input type="checkbox">',
+			'title'         => esc_html__('Plugin', 'codepotent-update-manager'),
 			'identifier'    => esc_html__('Identifier', 'codepotent-update-manager'),
 			'test_urls'     => esc_html__('Test URLs', 'codepotent-update-manager'),
 			'notifications' => esc_html__('Notifications', 'codepotent-update-manager'),
-			'date'          => esc_html__('Date',       'codepotent-update-manager'),
+			'date'          => esc_html__('Date', 'codepotent-update-manager')
 		];
 
 	}
@@ -543,6 +526,7 @@ In case of issues, give your testers the means to make contact. You can add mult
 	 */
 	public function filter_columns_content($column, $post_id) {
 
+		// Get meta data for given post id.
 		$meta = get_post_meta($post_id);
 
 		// Content for identifier column.
@@ -552,12 +536,14 @@ In case of issues, give your testers the means to make contact. You can add mult
 			echo '</p>';
 		}
 
+		// Content for test URLs column.
 		if ($column === 'test_urls') {
 			echo '<p>';
 			echo !empty($meta['test_urls'][0]) ? esc_attr($meta['test_urls'][0]) : '&#8211;';
 			echo '</p>';
 		}
-
+		
+		// Contnet for notifications column.
 		if ($column === 'notifications') {
 			echo '<p>';
 			echo !empty($meta['notifications'][0]) ? str_replace(',', '<br>', esc_attr($meta['notifications'][0])) : '&#8211;';
