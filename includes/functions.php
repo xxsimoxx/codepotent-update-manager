@@ -461,7 +461,7 @@ function parse_plugin_data($identifier, $endpoint, $request, $content) {
 	// Plugin release date; ie, 2019-12-16 15:02:08
 	$data['added']           = $endpoint[0]->post_date;
 	// Active installs; filterable since active installs aren't counted.
-	$data['active_installs'] = apply_filters(PLUGIN_PREFIX.'_'.$identifier.'_active_installs', 0);
+	$data['active_installs'] = apply_filters(PLUGIN_PREFIX.'_'.$identifier.'_active_installs', 0, $identifier);
 	if (empty($data['active_installs'])) {
 		unset($data['active_installs']);
 	}
