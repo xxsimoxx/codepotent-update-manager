@@ -190,7 +190,8 @@ jQuery(document).ready(function($) {
 		text += '[![Code Potent makes cool stuff!](https://static.codepotent.com/images/logotype/codepotent-logotype-words-optimized.svg)](https://codepotent.com/classicpress/plugins/)\n\n';
 		text += '== Changelog ==\n\n';
 		text += '# Changelog\n\n';
-		text += '* **[1.0.0](https://)** — 00-00-0000\n';
+		text += '### [Version 1.0.0](https://)\n';
+		text += '**JAN-07-2020**\n';
 		text += ' 1. Initial release \n';
 		text += ' 1. Fix \n';
 		text += ' 1. Add \n';
