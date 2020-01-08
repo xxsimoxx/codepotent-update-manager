@@ -33,6 +33,11 @@ if (!defined('ABSPATH')) {
 	die();
 }
 
+// Define PLUGIN_PREFIX if class is used outside Update Manager.
+if(!defined('PLUGIN_PREFIX')){
+	define(__NAMESPACE__.'\PLUGIN_PREFIX', 'codepotent_update_manager');
+}
+
 /**
  * Remote updater class for ClassicPress plugins.
  *
@@ -554,8 +559,8 @@ class UpdateClient {
 		$image_url  = untrailingslashit(WP_PLUGIN_URL).'/'.$plugin.'/images';
 
 		// Allow directory location to be filtered.
-		$image_path = apply_filters(PLUGIN_PREFIX.'_image_path', $image_path);
-		$image_url  = apply_filters(PLUGIN_PREFIX.'_image_url', $image_url);
+		$image_path = apply_filters(PLUGIN_PREFIX.'_image_path', $image_path, $plugin);
+		$image_url  = apply_filters(PLUGIN_PREFIX.'_image_url', $image_url, $plugin);
 
 		// Banner and icon images are keyed differently; it's a core thing.
 		$image_qualities = [
