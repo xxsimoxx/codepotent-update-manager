@@ -4,7 +4,7 @@
  * -----------------------------------------------------------------------------
  * Plugin Name: Update Manager
  * Description: Painlessly push updates to your ClassicPress plugin users! Serve updates from GitHub, your own site, or somewhere in the cloud. 100% integrated with the ClassicPress update process; slim and performant.
- * Version: 1.0.0-rc2
+ * Version: 1.0.0
  * Author: Code Potent
  * Author URI: https://codepotent.com
  * Plugin URI: https://codepotent.com/classicpress/plugins
@@ -16,7 +16,7 @@
  * implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. Full
  * text of the license is available at https://www.gnu.org/licenses/gpl-2.0.txt.
  * -----------------------------------------------------------------------------
- * Copyright © 2019 - CodePotent
+ * Copyright © 2019 - Code Potent
  * -----------------------------------------------------------------------------
  *           ____          _      ____       _             _
  *          / ___|___   __| | ___|  _ \ ___ | |_ ___ _ __ | |_
@@ -74,7 +74,7 @@ class UpdateManager {
 
 		// Register privacy page content.
 		add_action('admin_init', [$this, 'register_privacy_disclosure']);
-		
+
 		// Enqueue backend scripts.
 		add_action('admin_enqueue_scripts', [$this, 'enqueue_admin_scripts']);
 
@@ -92,10 +92,10 @@ class UpdateManager {
 
 		// Plugin upgrade.
 		add_action('upgrader_process_complete', [$this, 'upgrade_plugin'], 10, 2);
-		
+
 		// Convert post types after upgrade, if necessary.
 		add_action('registered_post_type', [$this, 'update_cpt_identifiers']);
-		
+
 		// Plugin activation.
 		register_activation_hook(__FILE__, [$this, 'activate_plugin']);
 
@@ -112,7 +112,7 @@ class UpdateManager {
 		UpdateClient::get_instance();
 
 	}
-	
+
 	/**
 	 * Privacy disclosure.
 	 *
@@ -125,16 +125,16 @@ class UpdateManager {
 	 * @since 1.0.0
 	 */
 	public function register_privacy_disclosure() {
-		
+
 		// Description of data collected.
 		$content = sprintf(
 				esc_html__('
-						
+
 			%1$sWhat data is received and how is it used?%2$s
-						
+
 			When a remote plugin queries for information from the Update Manager
 			plugin, the following data is sent along with the request:
-						
+
 			%3$s
 				%5$sThe plugin identifier (i.e., plugin-folder/plugin-file.php)
 					is a unique identifier that ensures you get the correct data.%6$s
@@ -145,7 +145,7 @@ class UpdateManager {
 				%5$sThe data from plugin headers provides version information;
 					for determining if an update is available.%6$s
 			%4$s
-						
+
 			', 'codepotent-update-manager'),
 				'<h3>',
 				'</h3>',
@@ -154,20 +154,20 @@ class UpdateManager {
 				'<li>',
 				'</li>'
 				);
-		
+
 		// Example text for a Privacy Policy entry.
 		$content .= sprintf(
 				esc_html__('
-						
+
 			%1$sExample Text for Privacy Policy%2$s
-						
+
 			%3$sNOTE%4$s: %5$sThe following text is not legal advice and should
 			not be taken as such. It is merely a suggestion of how one might go
 			about disclosing to end users the data that is received and how it
 			is used by the Update Manager plugin. If collecting more information
 			or storing any data, it would likely require additional disclosures
 			to ensure compliance with GDPR.%6$s
-						
+
 			%7$sIn an effort to keep you up to date with latest developments, we
 			will periodically make updates available for our plugins. When your
 			site checks in for updates, your URL is sent along with the request.
@@ -189,7 +189,7 @@ class UpdateManager {
 			auditing plugin. The duration of such logged data is subject to the
 			policies under which the data was collected and stored and may be
 			outside our control.%8$s
-						
+
 			', 'codepotent-update-manager'),
 				'<h3>',
 				'</h3>',
@@ -200,15 +200,15 @@ class UpdateManager {
 				'<p>',
 				'</p>'
 				);
-		
+
 		// Paragraph it up.
 		$content = wpautop($content, false);
-		
+
 		// Add the content to the system.
 		wp_add_privacy_policy_content(PLUGIN_NAME, $content);
-		
+
 	}
-	
+
 	/**
 	 * Enqueue admin scripts.
 	 *
@@ -352,13 +352,13 @@ class UpdateManager {
 
 		// Bring database object into scope.
 		global $wpdb;
-		
+
 		// Convert guids to new CPT identifier.
 		$wpdb->query("UPDATE $wpdb->posts SET guid = REPLACE(guid, 'plugin_repo', '".CPT_FOR_PLUGIN_ENDPOINTS."');");
-		
+
 		// Convert old CPT identifiers to new CPT identifier.
 		$wpdb->query("UPDATE $wpdb->posts SET post_type = REPLACE(post_type, 'plugin_repo', '".CPT_FOR_PLUGIN_ENDPOINTS."');");
-		
+
 	}
 
 	/**
@@ -389,17 +389,22 @@ class UpdateManager {
 	 * @param array $args Arguments from the upgrade process.
 	 */
 	public function upgrade_plugin($upgrader_object, $args) {
-		
+
 		// Not dealing with a plugin update? Bail.
 		if ($args['action'] !== 'update' || $args['type'] !== 'plugin') {
 			return;
 		}
-		
+
+		// Ensure the needed argument exists, or bail.
+		if (empty($args['plugins']) || !is_array($args['plugins'])) {
+			return;
+		}
+
 		// The Update Manager plugin wasn't just updated? Bail.
 		if (!in_array(PLUGIN_IDENTIFIER, $args['plugins'], true)) {
 			return;
 		}
-		
+
 		// Set a transient to flag that plugin was upgraded.
 		set_transient(PLUGIN_IDENTIFIER.'_upgraded', 1, 60);
 
@@ -416,23 +421,23 @@ class UpdateManager {
 	 * @since 1.0.0
 	 */
 	public function update_cpt_identifiers() {
-		
+
 		// No transient indicating plugin was just updated? Bail.
 		if (!get_transient(PLUGIN_IDENTIFIER.'_upgraded')) {
 			return;
 		}
-		
+
 		// Deactivate the plugin.
 		deactivate_plugins(PLUGIN_IDENTIFIER);
-		
+
 		// Reactivate the plugin; this converts RC1 post types to RC2.
 		activate_plugins(PLUGIN_IDENTIFIER);
-		
+
 		// All done; delete the transient.
 		delete_transient(PLUGIN_IDENTIFIER.'_upgraded');
-		
+
 	}
-	
+
 	/**
 	 * Plugin uninstallation/deletion.
 	 *
@@ -443,12 +448,12 @@ class UpdateManager {
 	 * @since 1.0.0
 	 */
 	public static function uninstall_plugin() {
-		
+
 		// Make sure the plugin's constants are available.
 		if (!defined(__NAMESPACE__.'\PLUGIN_VERSION')) {
 			require_once('/includes/constants.php');
 		}
-		
+
 		// Get ids for all CPT items created by the plugin.
 		$posts = get_posts([
 				'post_type'      => CPT_FOR_PLUGIN_ENDPOINTS,
@@ -456,17 +461,17 @@ class UpdateManager {
 				'posts_per_page' => -1,
 				'fields'         => 'ids'
 		]);
-		
+
 		// Delete posts, metadata, comments, all in one-fell-swoop.
 		if (!is_wp_error($posts) && !empty($posts)) {
 			foreach ($posts as $post) {
 				wp_delete_post($post->ID, true);
 			}
 		}
-		
+
 		// Delete options set by the plugin.
 		delete_option('cp_latest_version');
-		
+
 	}
 
 	/**

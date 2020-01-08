@@ -13,7 +13,7 @@
  * implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. Full
  * text of the license is available at https://www.gnu.org/licenses/gpl-2.0.txt.
  * -----------------------------------------------------------------------------
- * Copyright © 2019 - CodePotent
+ * Copyright © 2019 - Code Potent
  * -----------------------------------------------------------------------------
  *           ____          _      ____       _             _
  *          / ___|___   __| | ___|  _ \ ___ | |_ ___ _ __ | |_
@@ -87,7 +87,7 @@ function get_request() {
 
 	// Allow for filtering the incoming request.
 	$request = apply_filters(PLUGIN_PREFIX.'_filter_request', $request);
-	
+
 	// Return the cleansed request.
 	return $request;
 
@@ -254,7 +254,7 @@ function query_plugins() {
 			$data[$identifier] = [];
 		}
 	}
-	
+
 	// Return empty array (no update) or populated array (update data) as JSON.
 	return apply_filters(PLUGIN_PREFIX.'_query_plugins', $data, $request);
 
@@ -319,7 +319,7 @@ function plugin_information() {
 			$data['download_link'] = '';
 		}
 	}
-	
+
 	// Return the assembled data to the JSON endpoint.
 	return apply_filters(PLUGIN_PREFIX.'_plugin_information', $data, $request);
 
@@ -359,51 +359,56 @@ function parse_plugin_data($identifier, $endpoint, $request, $content) {
 	$sections = get_sections_data($lines);
 
 	// And now, for my next trick... markup all the modal sections!
-	
+
 	// Get markup for the Description tab.
 	if (!empty($sections['description'])) {
 		$sections['description'] = markup_plugin_generic_section($sections['description']);
 	}
-	
+
 	// Get markup for the FAQ tab.
 	if (!empty($sections['faq'])) {
 		$sections['faq'] = markup_plugin_generic_section($sections['faq']);
 	}
-	
+
 	// Get markup for the Installation tab.
 	if (!empty($sections['installation'])) {
 		$sections['installation'] = markup_plugin_generic_section($sections['installation']);
 	}
-	
+
 	// Get markup for the Screenshots tab.
 	if (!empty($sections['screenshots']) && !empty($request['screenshot_urls'])) {
 		$sections['screenshots'] = markup_plugin_screenshots($request['screenshot_urls'], $sections['screenshots']);
 	} else {
 		unset($sections['screenshots']);
 	}
-	
+
 	// Get markup for the Reviews tab.
 	if (!empty($sections['reviews'])) {
 		$reviews_raw = $sections['reviews'];
 		$sections['reviews'] = markup_plugin_reviews($sections['reviews']);
 	}
-	
+
 	// Get markup for the Other Notes tab.
 	if (!empty($sections['other_notes'])) {
 		$sections['other_notes'] = markup_plugin_generic_section($sections['other_notes']);
 	}
-	
+
 	// Get markup for the Reviews tab.
 	if (!empty($sections['changelog'])) {
 		$sections['changelog'] = markup_plugin_generic_section($sections['changelog']);
 	}
-	
-	// Get markup for the Upgrade Notice tab; actually is plaintext.
+
+	// Get markup for the Upgrade Notices; tab and plugin row.
 	if (!empty($sections['upgrade_notice'])) {
+		// Plugin row; no markup; string.
+		$data['upgrade_notice'] = markup_plugin_upgrade_notice($sections['upgrade_notice'], true);
+		// Modal window; markdown array converted to markup string.
 		$sections['upgrade_notice'] = markup_plugin_upgrade_notice($sections['upgrade_notice']);
-		$data['upgrade_notice'] = $sections['upgrade_notice'];
+	} else {
+		// No upgrade notice? No need for a tab.
+		unset($sections['upgrade_notice']);
 	}
-	
+
 	// If update is being tested, show a cautionary note above every section.
 	if ($endpoint[0]->post_status === 'pending') {
 		$test_urls = get_allowed_test_urls($endpoint[0]->ID);
@@ -414,7 +419,7 @@ function parse_plugin_data($identifier, $endpoint, $request, $content) {
 			}
 		}
 	}
-	
+
 	// Flag indicating plugin is not hosted via ClassicPress plugin directory.
 	$data['external']        = true;
 	// Unique identifier; ie, my-plugin-dir/my-plugin-file.php
@@ -476,22 +481,22 @@ function parse_plugin_data($identifier, $endpoint, $request, $content) {
 			$header['requires'] => true
 		];
 	}
-	
+
 	// Before capturing sections to the data array; add star rating data.
 	if (!empty($sections['reviews'])) {
 		$data['ratings']     = get_plugin_ratings($reviews_raw);
 		$data['num_ratings'] = array_sum($data['ratings']);
 		$data['rating']      = get_plugin_ratings_score($data['ratings'], $data['num_ratings']);
 	}
-	
+
 	// Place sections at the end; purely for a more visually aesthetic endpoint.
 	$data['sections']        = $sections;
-	
+
 	// Assignments complete! One final thing left...
-	
+
 	// Remove certain fields if URL not whitelisted to receive Pending updates.
 	$data = prevent_unauthorized_pending_updates($request, $endpoint, $data);
-	
+
 	// Finally!
 	return $data;
 
@@ -516,12 +521,12 @@ function parse_plugin_data($identifier, $endpoint, $request, $content) {
  * @return array The possibly-amended data array.
  */
 function prevent_unauthorized_pending_updates($request, $endpoint, $data) {
-	
+
 	// No endpoint id? Bail.
 	if (empty($endpoint[0]->ID)) {
 		return [];
 	}
-	
+
 	// Endpoint not in Pending status? Return unaltered data.
 	if ($endpoint[0]->post_status !== 'pending') {
 		return $data;
@@ -529,12 +534,12 @@ function prevent_unauthorized_pending_updates($request, $endpoint, $data) {
 
 	// Get URLs allowed to have Pending updates.
 	$test_urls = get_allowed_test_urls($endpoint[0]->ID);
-	
+
 	// Requesting URL is whitelisted for Pending updates? Return unaltered data.
 	if (in_array($request['site_url'], $test_urls, true)) {
 		return $data;
 	}
-		
+
 	// Alter data to provide info only without update.
 	$data['version'] = $request['version'];
 	$data['requires_php'] = '';
@@ -543,7 +548,7 @@ function prevent_unauthorized_pending_updates($request, $endpoint, $data) {
 	$data['download_link'] = '';
 	$data['last_updated'] = '';
 	$data['compatibility']   = [];
-	
+
 	// Unset the (list-table) upgrade notice and its related (modal window) tab.
 	unset($data['upgrade_notice'], $data['sections']['upgrade_notice']);
 
@@ -1099,10 +1104,10 @@ function markup_plugin_screenshots($urls, $raw_captions) {
 			$screenshots .= '<div>'.Parsedown::instance()->setBreaksEnabled(true)->text($caption).'</div>';
 		}
 	}
-	
+
 	// Return the markup.
 	return $screenshots;
-	
+
 }
 
 /**
@@ -1115,22 +1120,28 @@ function markup_plugin_screenshots($urls, $raw_captions) {
  * @since 1.0.0
  *
  */
-function markup_plugin_upgrade_notice($notice) {
+function markup_plugin_upgrade_notice($notice, $text_only=false) {
 
 	// If notice is a string, return it.
 	if (is_string($notice)) {
 		return $notice;
 	}
-	
-	// If notice is an array, trim each line and convert to markup.
-	foreach ($notice as $line) {
-		if (!empty(trim($line))) {
-			$notice = Parsedown::instance()->setBreaksEnabled(true)->line($line);
-			break;
+
+	// Plugin row gets 1 line of text; make it so.
+	if ($text_only) {
+		foreach ($notice as $line) {
+			$line = trim($line);
+			if (empty($line) || strpos($line, '#') === 0) {
+				continue;
+			}
+			return $line;
 		}
 	}
 
-	// Return the markup string.
+	// Convert $notice array to markup.
+	$notice = markup_plugin_generic_section($notice);
+
+	// Return markup.
 	return $notice;
 
 }

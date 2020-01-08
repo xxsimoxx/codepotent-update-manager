@@ -13,7 +13,7 @@
  * implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. Full
  * text of the license is available at https://www.gnu.org/licenses/gpl-2.0.txt.
  * -----------------------------------------------------------------------------
- * Copyright © 2019 - CodePotent
+ * Copyright © 2019 - Code Potent
  * -----------------------------------------------------------------------------
  *           ____          _      ____       _             _
  *          / ___|___   __| | ___|  _ \ ___ | |_ ___ _ __ | |_
@@ -75,7 +75,7 @@ class PluginEndpoint {
 
 		// Update metaboxes.
 		add_action('save_post', [$this, 'update_meta_box_primary'], 10, 2);
-		
+
 		// Add custom columns.
 		add_filter('manage_'.CPT_FOR_PLUGIN_ENDPOINTS.'_posts_columns', [$this, 'filter_columns']);
 
@@ -224,10 +224,9 @@ class PluginEndpoint {
 		$identifier = get_post_meta($post->ID, 'id', true);
 
 		// Initialization.
-		$content = get_post_meta($post->ID, $identifier, true);
-
-		if (empty($content)) {
-			$content = '';
+		$content = '';
+		if (!empty($identifier)) {
+			$content = get_post_meta($post->ID, $identifier, true);
 		}
 
 		// Get test URLs, if any.
@@ -422,7 +421,7 @@ class PluginEndpoint {
 		return $post_id;
 
 	}
-	
+
 	/**
 	 * Register auto-completers metabox.
 	 *
@@ -542,7 +541,7 @@ class PluginEndpoint {
 			echo !empty($meta['test_urls'][0]) ? esc_attr($meta['test_urls'][0]) : '&#8211;';
 			echo '</p>';
 		}
-		
+
 		// Contnet for notifications column.
 		if ($column === 'notifications') {
 			echo '<p>';
