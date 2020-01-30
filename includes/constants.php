@@ -4,7 +4,6 @@
  * -----------------------------------------------------------------------------
  * Purpose: Namespaced constants for ClassicPress plugins.
  * Package: CodePotent\UpdateManager
- * Version: 1.0.0
  * Author: Code Potent
  * Author URI: https://codepotent.com
  * -----------------------------------------------------------------------------
@@ -43,7 +42,7 @@ const VENDOR_PREFIX = 'codepotent';
 // Plugin name in user-readable format.
 const PLUGIN_NAME = 'Update Manager';
 // Plugin version number.
-const PLUGIN_VERSION = '1.0.0';
+const PLUGIN_VERSION = '1.0.1';
 // Plugin directory name; ie, codepotent-plugin-name
 define(__NAMESPACE__.'\PLUGIN_DIRNAME', substr(str_replace('\\', '/', dirname(__DIR__)), strrpos(str_replace(['\\', '/'], '/', dirname(__DIR__)), '/')+1));
 // Plugin file name; ie, codepotent-plugin-name.php

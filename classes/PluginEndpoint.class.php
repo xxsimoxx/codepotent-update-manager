@@ -4,7 +4,6 @@
  * -----------------------------------------------------------------------------
  * Purpose: CPT for endpoint entries with meta boxes and custom columns.
  * Package: CodePotent\UpdateManager\PluginEndpoint
- * Version: 1.0.0
  * Author: Code Potent
  * Author URI: https://codepotent.com
  * -----------------------------------------------------------------------------

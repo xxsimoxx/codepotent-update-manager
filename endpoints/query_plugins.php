@@ -4,7 +4,6 @@
  * -----------------------------------------------------------------------------
  * Purpose: JSON endpoint template when querying for plugin updates.
  * Package: CodePotent\UpdateManager
- * Version: 1.0.0
  * Author: Code Potent
  * Author URI: https://codepotent.com
  * -----------------------------------------------------------------------------

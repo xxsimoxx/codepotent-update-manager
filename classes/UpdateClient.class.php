@@ -554,8 +554,8 @@ class UpdateClient {
 		$image_url  = untrailingslashit(WP_PLUGIN_URL).'/'.$plugin.'/images';
 
 		// Allow directory location to be filtered.
-		$image_path = apply_filters(PLUGIN_PREFIX.'_image_path', $image_path);
-		$image_url  = apply_filters(PLUGIN_PREFIX.'_image_url', $image_url);
+		$image_path = apply_filters('codepotent_update_manager_image_path', $image_path);
+		$image_url  = apply_filters('codepotent_update_manager_image_url', $image_url);
 
 		// Banner and icon images are keyed differently; it's a core thing.
 		$image_qualities = [
