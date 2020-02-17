@@ -22,6 +22,31 @@
 // Wait until the page has loaded.
 jQuery(document).ready(function($) {
 
+	// Disable save buttons as a default state.
+	if ($('#codepotent-update-manager-plugin-id').val() === '') {
+		$('input#save-post').prop('disabled', true);
+		$('input#publish').prop('disabled', true);
+	}
+
+	// Enable save buttons only when identifier has a value (even if invalid).
+	$('#codepotent-update-manager-plugin-id').keyup(function () {
+		if ($(this).val() === '') {
+			$('input#save-post').prop('disabled', true);
+			$('input#publish').prop('disabled', true);
+		} else {
+			$('input#save-post').prop('disabled', false);
+			$('input#publish').prop('disabled', false);
+		}
+	});
+
+	// Prevent enter-key saves.
+	$('form#post').keydown(function (e) {
+		if (e.keyCode == 13) {
+			e.preventDefault();
+			return false;
+		}
+	});
+
 	// Click handler for inserting template text via button.
 	$('#'+slug+'-autocompleters button').click(function (e) {
 		// Prevent default link behavior.

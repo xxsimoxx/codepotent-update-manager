@@ -4,7 +4,7 @@
  * -----------------------------------------------------------------------------
  * Plugin Name: Update Manager
  * Description: Painlessly push updates to your ClassicPress plugin users! Serve updates from GitHub, your own site, or somewhere in the cloud. 100% integrated with the ClassicPress update process; slim and performant.
- * Version: 1.0.1
+ * Version: 2.0.0
  * Author: Code Potent
  * Author URI: https://codepotent.com
  * Plugin URI: https://codepotent.com/classicpress/plugins
@@ -72,6 +72,9 @@ class UpdateManager {
 		// Register the autoload method.
 		spl_autoload_register(__CLASS__.'::autoload_classes');
 
+		//
+		add_action('admin_menu', [$this, 'register_admin_menu'], 9);
+
 		// Register privacy page content.
 		add_action('admin_init', [$this, 'register_privacy_disclosure']);
 
@@ -105,13 +108,48 @@ class UpdateManager {
 		// Plugin deletion.
 		register_uninstall_hook(__FILE__, [__CLASS__, 'uninstall_plugin']);
 
-		// Run the main plugin code; the CPT.
+		// Run the CPT-generating code.
 		new PluginEndpoint;
+		new ThemeEndpoint;
 
 		// Run the update client.
 		UpdateClient::get_instance();
 
 	}
+
+	public function register_admin_menu() {
+
+		add_menu_page(
+			esc_html__('Update Manager', 'codepotent-update-manager'),
+			esc_html__('Update Manager', 'codepotent-update-manager'),
+			'manage_options',
+			'update-manager',
+			[$this, 'admin_placeholder'],
+			'dashicons-update',
+			apply_filters(PLUGIN_PREFIX.'_menu_pos', null),
+			);
+
+		add_submenu_page(
+				'update-manager',
+				esc_html__('Update Manager Overview', 'codepotent-update-manager'),
+				esc_html__(' Overview', 'codepotent-update-manager'),
+				'manage_options',
+				'update-manager-overview',
+				[$this, 'admin_placeholder'],
+				);
+		remove_submenu_page('update-manager', 'update-manager');
+
+	}
+
+	public function admin_placeholder() {
+		echo '<h1>';
+		echo sprintf(
+				esc_html__('%s Overview', 'codepotent-update-manager'),
+				PLUGIN_NAME);
+		echo '</h1>';
+
+	}
+
 
 	/**
 	 * Privacy disclosure.
@@ -330,8 +368,9 @@ class UpdateManager {
 		$screen = get_current_screen();
 
 		// Are we on this post type's screen? If so, change the footer text.
-		if ($screen->post_type === CPT_FOR_PLUGIN_ENDPOINTS) {
-			$text = '<span id="footer-thankyou"><a href="'.CODE_POTENT_HOME_URL.'/classicpress/plugins/" title="'.CODE_POTENT_TITLE_ALT.'">'.PLUGIN_NAME.'</a> '.PLUGIN_VERSION.' — A <a href="'.CODE_POTENT_HOME_URL.'" title="'.CODE_POTENT_TITLE_ALT.'"><img src="'.CODE_POTENT_LOGO_SVG_WORDS.'" alt="'.CODE_POTENT_TITLE_ALT.'" style="height:1em;vertical-align:sub;"></a> Production</span>';
+		if ($screen->post_type === CPT_FOR_PLUGIN_ENDPOINTS ||
+			$screen->post_type === CPT_FOR_THEME_ENDPOINTS) {
+				$text = '<span id="footer-thankyou" style="vertical-align:text-bottom;"><a href="'.VENDOR_PLUGIN_URL.'/" title="'.PLUGIN_DESCRIPTION.'">'.PLUGIN_NAME.'</a> '.PLUGIN_VERSION.' &#8212; by <a href="'.VENDOR_HOME_URL.'" title="'.VENDOR_TAGLINE.'"><img src="'.VENDOR_WORDMARK_URL.'" alt="'.VENDOR_TAGLINE.'" style="height:1.02em;vertical-align:sub !important;"></a></span>';
 		}
 
 		// Return the footer text.
@@ -406,7 +445,7 @@ class UpdateManager {
 		}
 
 		// Set a transient to flag that plugin was upgraded.
-		set_transient(PLUGIN_IDENTIFIER.'_upgraded', 1, 60);
+		set_transient(PLUGIN_IDENTIFIER.'_upgraded', 1, 120);
 
 	}
 

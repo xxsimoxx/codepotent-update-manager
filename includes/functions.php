@@ -55,8 +55,13 @@ function get_request() {
 		if (empty($_SERVER['HTTP_USER_AGENT'])) {
 			return [];
 		}
+
+		// Unglue the user agent parts.
+		$user_agent_parts = explode(';', $_SERVER['HTTP_USER_AGENT']);
+
 		// Extract url from string: ClassicPress/x.x.x; https://www.the-site.com
-		$site_url = trim(array_pop(explode(';', $_SERVER['HTTP_USER_AGENT'])));
+		$site_url = trim(array_pop($user_agent_parts));
+
 		// No URL? Bail.
 		if (empty($site_url) || !filter_var($site_url, FILTER_VALIDATE_URL)) {
 			return [];
@@ -981,7 +986,7 @@ function markup_plugin_generic_section($content) {
 	$markup = '';
 
 	// Now Parsedown gets a turn; and returns the final markup.
-	$markup .= Parsedown::instance()->setBreaksEnabled(true)->text(implode("\r\n", $content));
+	$markup .= Parsedown::instance()->text(implode("\r\n", $content));
 
 	// Return the markup.
 	return $markup;

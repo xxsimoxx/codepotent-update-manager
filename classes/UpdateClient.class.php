@@ -85,7 +85,7 @@ class UpdateClient {
 			// Plugin identifier; ie, plugin-folder/plugin-file.php.
 			'id' => $this->get_plugin_identifier(),
 			// Leave as-is.
-			'api' => '1.1.0',
+			'api' => '2.0.0',
 			// Leave as-is – tutorial can be created with enough interest.
 			'post' => [],
 		];
@@ -483,7 +483,7 @@ class UpdateClient {
 		$options = [
 			'user-agent' => 'ClassicPress/'.$cp_version.'; '.get_bloginfo('url'),
 			'body'       => $body,
-			'timeout'    => 20,
+			'timeout'    => apply_filters('codepotent_update_manager_timeout', 5),
 		];
 
 		// Args to append to the endpoint URL.
@@ -647,8 +647,13 @@ class UpdateClient {
 	 */
 	public function get_latest_version_number() {
 
-		// Initialization.
-		$version = '';
+		// Get current ClassicPress version, if stored.
+		$version = get_transient(PLUGIN_PREFIX.'_cp_version');
+
+		// Return version number, if now known.
+		if (!empty($version)) {
+			return $version;
+		}
 
 		// Make a request to the ClassicPress versions API.
 		$response = wp_remote_get('https://api-v1.classicpress.net/upgrade/index.php', ['timeout'=>3]);
@@ -675,10 +680,13 @@ class UpdateClient {
 			}
 		} // At this point, $version = 1.1.1.json
 
-		// Get just the version.
+		// Get just the version portion of the string.
 		if ($version) {
 			$version = str_replace('.json', '', $version);
 		}
+
+		// A transient ensures the query is not run more than every 10 minutes.
+		set_transient(PLUGIN_PREFIX.'_cp_version', $version, MINUTE_IN_SECONDS * 10);
 
 		// Return the version string.
 		return $version;
