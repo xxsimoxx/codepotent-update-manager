@@ -126,7 +126,7 @@ class UpdateManager {
 			'update-manager',
 			[$this, 'admin_placeholder'],
 			'dashicons-update',
-			apply_filters(PLUGIN_PREFIX.'_menu_pos', null),
+			apply_filters(PLUGIN_PREFIX.'_menu_pos', null)
 			);
 
 		add_submenu_page(
@@ -135,7 +135,7 @@ class UpdateManager {
 				esc_html__(' Overview', 'codepotent-update-manager'),
 				'manage_options',
 				'update-manager-overview',
-				[$this, 'admin_placeholder'],
+				[$this, 'admin_placeholder']
 				);
 		remove_submenu_page('update-manager', 'update-manager');
 
