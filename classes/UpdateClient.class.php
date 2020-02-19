@@ -648,7 +648,7 @@ class UpdateClient {
 	public function get_latest_version_number() {
 
 		// Get current ClassicPress version, if stored.
-		$version = get_transient(PLUGIN_PREFIX.'_cp_version');
+		$version = get_transient('codepotent_update_manager_cp_version');
 
 		// Return version number, if now known.
 		if (!empty($version)) {
@@ -686,7 +686,7 @@ class UpdateClient {
 		}
 
 		// A transient ensures the query is not run more than every 10 minutes.
-		set_transient(PLUGIN_PREFIX.'_cp_version', $version, MINUTE_IN_SECONDS * 10);
+		set_transient('codepotent_update_manager_cp_version', $version, MINUTE_IN_SECONDS * 10);
 
 		// Return the version string.
 		return $version;
