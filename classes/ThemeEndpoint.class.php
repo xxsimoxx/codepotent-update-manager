@@ -223,7 +223,7 @@ class ThemeEndpoint {
 	 */
 	public function get_default_endpoint_content() {
 
-		$content = esc_html__('=== Plugin Name Here ===', 'codepotent-update-manager')."\n\n";
+		$content = esc_html__('=== Theme Name Here ===', 'codepotent-update-manager')."\n\n";
 		$content .= esc_html__('Version:           2.0.0', 'codepotent-update-manager')."\n";
 		$content .= esc_html__('Requires:          2.0.0', 'codepotent-update-manager')."\n";
 		$content .= esc_html__('Download link:     https://', 'codepotent-update-manager')."\n\n";
