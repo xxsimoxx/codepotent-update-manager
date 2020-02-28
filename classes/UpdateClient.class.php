@@ -26,7 +26,7 @@
 namespace CodePotent\UpdateManager;
 
 // EDIT: URL where Update Manager is installed; with trailing slash!
-const UPDATE_SERVER = 'https://localhost/DefaultCP/';
+const UPDATE_SERVER = 'https://codepotent.com/';
 
 // EDIT: plugin or theme?
 const UPDATE_TYPE = 'plugin';
