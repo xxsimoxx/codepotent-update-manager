@@ -257,7 +257,7 @@ class PluginEndpoint {
 		}
 
 		// Default content for new items.
-		if (empty($post->title && empty($content))) {
+		if (empty($post->post_title) && empty($content)) {
 			$content = $this->get_default_endpoint_content();
 		}
 
