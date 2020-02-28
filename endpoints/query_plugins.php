@@ -2,7 +2,7 @@
 
 /**
  * -----------------------------------------------------------------------------
- * Purpose: JSON endpoint template when querying for plugin updates.
+ * Purpose: JSON endpoint template when querying for plugin or theme updates.
  * Package: CodePotent\UpdateManager
  * Author: Code Potent
  * Author URI: https://codepotent.com
@@ -12,7 +12,7 @@
  * implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. Full
  * text of the license is available at https://www.gnu.org/licenses/gpl-2.0.txt.
  * -----------------------------------------------------------------------------
- * Copyright © 2019 - Code Potent
+ * Copyright 2020, Code Potent
  * -----------------------------------------------------------------------------
  *           ____          _      ____       _             _
  *          / ___|___   __| | ___|  _ \ ___ | |_ ___ _ __ | |_
@@ -31,8 +31,8 @@ if (!defined('ABSPATH')) {
 	die();
 }
 
-// Query for plugin updates.
-$data = query_plugins();
+// Query for component updates.
+$data = query_components('plugin');
 
 // Prevent caching.
 nocache_headers();

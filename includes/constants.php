@@ -78,7 +78,7 @@ define(__NAMESPACE__.'\PLUGIN_AUTHOR_URL', $plugin['AuthorURI']);
 define(__NAMESPACE__.'\PLUGIN_URL', $plugin['PluginURI']);
 
 // -----------------------------------------------------------------------------
-// CPT, TAXONOMY, JSON
+// Custom post type and JSON identifiers.
 // -----------------------------------------------------------------------------
 
 // Primary query variable for the JSON endpoints.

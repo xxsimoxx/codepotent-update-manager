@@ -3,7 +3,7 @@
 /**
  * -----------------------------------------------------------------------------
  * Purpose: CPT for endpoint entries with meta boxes and custom columns.
- * Package: CodePotent\UpdateManager\ThemeEndpoint
+ * Package: CodePotent\UpdateManager
  * Author: Code Potent
  * Author URI: https://codepotent.com
  * -----------------------------------------------------------------------------
@@ -12,7 +12,7 @@
  * implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. Full
  * text of the license is available at https://www.gnu.org/licenses/gpl-2.0.txt.
  * -----------------------------------------------------------------------------
- * Copyright © 2019 - Code Potent
+ * Copyright 2020, Code Potent
  * -----------------------------------------------------------------------------
  *           ____          _      ____       _             _
  *          / ___|___   __| | ___|  _ \ ___ | |_ ___ _ __ | |_
@@ -33,12 +33,14 @@ if (!defined('ABSPATH')) {
 
 class ThemeEndpoint {
 
+	var $component = 'theme';
+
 	/**
 	 * Constructor.
 	 *
 	 * @author John Alarcon
 	 *
-	 * @since 1.0.0
+	 * @since 2.0.0
 	 */
 	public function __construct() {
 
@@ -53,11 +55,11 @@ class ThemeEndpoint {
 	 *
 	 * @author John Alarcon
 	 *
-	 * @since 1.0.0
+	 * @since 2.0.0
 	 */
 	public function init() {
 
-		// Register custom post type for theme updates.
+		// Register custom post type for updates.
 		add_action('init', [$this, 'register_custom_post_type']);
 
 		// Filter CPT title placeholder.
@@ -90,7 +92,7 @@ class ThemeEndpoint {
 	 *
 	 * @author John Alarcon
 	 *
-	 * @since 1.0.0
+	 * @since 2.0.0
 	 */
 	public function register_custom_post_type() {
 
@@ -136,7 +138,7 @@ class ThemeEndpoint {
 	 *
 	 * @author John Alarcon
 	 *
-	 * @since 1.0.0
+	 * @since 2.0.0
 	 *
 	 * @param string $placeholder
 	 * @param object $post
@@ -162,7 +164,7 @@ class ThemeEndpoint {
 	 *
 	 * @author John Alarcon
 	 *
-	 * @since 1.0.0
+	 * @since 2.0.0
 	 *
 	 * @param array $actions
 	 * @param object $post
@@ -173,8 +175,8 @@ class ThemeEndpoint {
 		// Dealing with this CPT? Add links!
 		if (get_post_type() === CPT_FOR_THEME_ENDPOINTS) {
 			if ($post->post_status === 'publish' || $post->post_status === 'pending') {
-				$theme_identifier = get_post_meta($post->ID, 'id', true);
-				$actions['endpoint'] = '<a href="'.site_url().'?'.ENDPOINT_VARIABLE.'=theme_information&theme='.$theme_identifier.'&site_url='.site_url().'">'.esc_html__('View Endpoint', 'codepotent-update-manager').'</a>';
+				$identifier = get_post_meta($post->ID, 'id', true);
+				$actions['endpoint'] = '<a href="'.site_url().'?'.ENDPOINT_VARIABLE.'=theme_information&theme='.esc_attr($identifier).'&site_url='.site_url().'">'.esc_html__('View Endpoint', 'codepotent-update-manager').'</a>';
 			}
 		}
 
@@ -185,11 +187,11 @@ class ThemeEndpoint {
 
 	/**
 	 * This method registers the primary metabox which contains the input fields
-	 * for the theme identifier, text editor, and test-abled URLs.
+	 * for the identifier, editor, test URLs and notification methods.
 	 *
 	 * @author John Alarcon
 	 *
-	 * @since 1.0.0
+	 * @since 2.0.0
 	 */
 	public function register_meta_box_primary() {
 
@@ -206,25 +208,57 @@ class ThemeEndpoint {
 	}
 
 	/**
-	 * Render primary metabox.
+	 * Default endpoint content
 	 *
-	 * The method renders the output of the primary metabox, adds a nonce, etc.
+	 * This method returns the content that populates the editor when a new post
+	 * (plugin or theme endpoint) is created.
 	 *
 	 * @author John Alarcon
 	 *
-	 * @since 1.0.0
+	 * @since 2.0.0
+	 *
+	 * @param string $type Type of component; plugin or theme.
+	 * @param string $template Type of content; fillable, minimum, or maximum.
+	 * @return string Default content to populate editor.
+	 */
+	public function get_default_endpoint_content() {
+
+		$content = esc_html__('=== Plugin Name Here ===', 'codepotent-update-manager')."\n\n";
+		$content .= esc_html__('Version:           2.0.0', 'codepotent-update-manager')."\n";
+		$content .= esc_html__('Requires:          2.0.0', 'codepotent-update-manager')."\n";
+		$content .= esc_html__('Download link:     https://', 'codepotent-update-manager')."\n\n";
+		$content .= esc_html__('== Description ==', 'codepotent-update-manager')."\n\n";
+		$content .= esc_html__('This text displays in the modal windows; it is required. Write something!', 'codepotent-update-manager')."\n\n";
+
+		return $content;
+
+	}
+
+	/**
+	 * Render primary metabox.
+	 *
+	 * This method renders the output of the primary metabox, adds a nonce, etc.
+	 *
+	 * @author John Alarcon
+	 *
+	 * @since 2.0.0
 	 *
 	 * @param object $post
 	 */
 	public function render_meta_box_primary($post) {
 
-		// Get the theme identifier.
+		// Get the identifier.
 		$identifier = get_post_meta($post->ID, 'id', true);
 
 		// Initialization.
 		$content = '';
 		if (!empty($identifier)) {
 			$content = get_post_meta($post->ID, $identifier, true);
+		}
+
+		// Default content for new items.
+		if (empty($post->title && empty($content))) {
+			$content = $this->get_default_endpoint_content();
 		}
 
 		// Get test URLs, if any.
@@ -237,12 +271,12 @@ class ThemeEndpoint {
 		echo '<table class="form-table">'."\n";
 		echo '	<tbody>'."\n";
 
-		// Theme identifier.
+		// Identifier.
 		echo '		<tr>'."\n";
-		echo '			<th scope="row"><label for="'.PLUGIN_SLUG.'-theme-id">'.esc_html__('Endpoint Identifier', 'codepotent-update-manager').'</label></th>'."\n";
+		echo '			<th scope="row"><label for="'.PLUGIN_SLUG.'-identifier">'.esc_html__('Endpoint Identifier', 'codepotent-update-manager').'</label></th>'."\n";
 		echo '			<td>'."\n";
 		echo '				<p>'."\n";
-		echo '					<input class="widefat" name="'.PLUGIN_PREFIX.'_theme_id" type="text" id="'.PLUGIN_SLUG.'-theme-id" value="'.esc_attr($identifier).'" placeholder="'.esc_attr('theme-folder-name').'">'."\n";
+		echo '					<input class="widefat" name="'.PLUGIN_PREFIX.'_theme_id" type="text" id="'.PLUGIN_SLUG.'-identifier" value="'.esc_attr($identifier).'" placeholder="'.esc_attr('theme-folder-name').'">'."\n";
 		echo '				</p>'."\n";
 		echo '				<p class="description">';
 		echo sprintf(
@@ -258,7 +292,7 @@ class ThemeEndpoint {
 		echo '			<th scope="row"><label for="'.PLUGIN_SLUG.'-editor">'.esc_html__('Theme Details', 'codepotent-update-manager').'</label></th>'."\n";
 		echo '			<td>'."\n";
 		echo '				<p>';
-		echo '					<textarea class="widefat" rows="80" name="'.PLUGIN_PREFIX.'_editor" id="'.PLUGIN_SLUG.'-editor">'.esc_textarea($content).'</textarea>';
+		echo '					<textarea class="widefat" rows="20" name="'.PLUGIN_PREFIX.'_editor" id="'.PLUGIN_SLUG.'-editor">'.esc_textarea($content).'</textarea>';
 		echo '				</p>'."\n";
 		echo '				<p class="description">';
 		echo sprintf(
@@ -286,7 +320,7 @@ class ThemeEndpoint {
 				'</code>');
 		echo '&nbsp;';
 		echo sprintf(
-				esc_html__('URLs must point to the root of a ClassicPress installation. A couple examples might be: %1$shttps://www.yoursite.com%2$s or %1$shttps://www.yoursite.com/your/path/to/classicpress%2$s. The theme related to this endpoint must also be installed there, whether active or inactive.', 'codepotent-update-manager'),
+				esc_html__('URLs must point to the root of a ClassicPress installation. A couple examples might be: %1$shttps://www.yoursite.com%2$s or %1$shttps://www.yoursite.com/your/path/to/classicpress%2$s. The theme related to this endpoint must also be installed and active there.', 'codepotent-update-manager'),
 				'<code>',
 				'</code>');
 		echo '</p>'."\n";
@@ -325,7 +359,7 @@ class ThemeEndpoint {
 	 *
 	 * @author John Alarcon
 	 *
-	 * @since 1.0.0
+	 * @since 2.0.0
 	 *
 	 * @param integer $post_id
 	 * @param object $post
@@ -333,7 +367,7 @@ class ThemeEndpoint {
 	 */
 	public function update_meta_box_primary($post_id, $post) {
 
-		// Remove any PHP tags prior to stripping data to prevent corruption.
+		// Replace PHP tags prior to stripping data; prevents data corruption.
 		if (!empty($_POST[PLUGIN_PREFIX.'_editor'])) {
 			$_POST[PLUGIN_PREFIX.'_editor'] = str_replace(['<?','? >'], ['&lt;?','?&gt;',], $_POST[PLUGIN_PREFIX.'_editor']);
 		}
@@ -366,7 +400,7 @@ class ThemeEndpoint {
 			return $post_id;
 		}
 
-		// Get the theme identifier.
+		// Get the identifier.
 		$identifier = get_post_meta($post->ID, 'id', true);
 
 		// User has no permission? Bail.
@@ -374,8 +408,8 @@ class ThemeEndpoint {
 			return $post_id;
 		}
 
-		// Theme identifier.
-		$new_identifier = isset($request[PLUGIN_PREFIX.'_theme_id']) ? sanitize_text_field($request[PLUGIN_PREFIX.'_plugin_id']) : '';
+		// Identifier.
+		$new_identifier = isset($request[PLUGIN_PREFIX.'_theme_id']) ? sanitize_text_field($request[PLUGIN_PREFIX.'_theme_id']) : '';
 
 		// Ensure data stays in sync if identifier changes.
 		if ($new_identifier !== $identifier) {
@@ -432,7 +466,7 @@ class ThemeEndpoint {
 	 *
 	 * @author John Alarcon
 	 *
-	 * @since 1.0.0
+	 * @since 2.0.0
 	 */
 	public function register_meta_box_autocompleters() {
 
@@ -457,7 +491,7 @@ class ThemeEndpoint {
 	 *
 	 * @author John Alarcon
 	 *
-	 * @since 1.0.0
+	 * @since 2.0.0
 	 */
 	public function render_meta_box_autocompleters() {
 
@@ -470,7 +504,7 @@ class ThemeEndpoint {
 		echo '</p>';
 
 		// CTA button.
-		echo '<p><button type="button" class="button button-secondary button-hero widefat without-examples">';
+		echo '<p><button type="button" class="button button-secondary button-hero widefat without-examples" data-component="theme">';
 		echo esc_html__('Insert Template', 'codepotent-update-manager');
 		echo '</button></p>';
 
@@ -478,9 +512,9 @@ class ThemeEndpoint {
 		echo '<p>';
 		echo sprintf(
 			esc_html__('You can insert a %sfully completed example%s to get your bearings, or even just see the %sabsolute minimum requirements%s.', 'codepotent-update-manager'),
-			'<a href="#" class="with-examples">',
+			'<a href="#" class="with-examples" data-component="theme">',
 			'</a>',
-			'<a href="#" class="reqs-only">',
+			'<a href="#" class="reqs-only" data-component="theme">',
 			'</a>');
 		echo '</p>';
 
@@ -494,7 +528,7 @@ class ThemeEndpoint {
 	 *
 	 * @author John Alarcon
 	 *
-	 * @since 1.0.0
+	 * @since 2.0.0
 	 *
 	 * @param array $columns
 	 * @return array
@@ -505,6 +539,7 @@ class ThemeEndpoint {
 		return [
 			'cb'            => '<input type="checkbox">',
 			'title'         => esc_html__('Theme', 'codepotent-update-manager'),
+			'version'       => esc_html__('Version', 'codepotent-update-manager'),
 			'identifier'    => esc_html__('Identifier', 'codepotent-update-manager'),
 			'test_urls'     => esc_html__('Test URLs', 'codepotent-update-manager'),
 			'notifications' => esc_html__('Notifications', 'codepotent-update-manager'),
@@ -521,7 +556,7 @@ class ThemeEndpoint {
 	 *
 	 * @author John Alarcon
 	 *
-	 * @since 1.0.0
+	 * @since 2.0.0
 	 *
 	 * @param string $column
 	 * @param integer $post_id
@@ -530,6 +565,19 @@ class ThemeEndpoint {
 
 		// Get meta data for given post id.
 		$meta = get_post_meta($post_id);
+
+		// Content for version column.
+		if ($column === 'version') {
+			if (!empty($meta['id'])) {
+				$lines = explode("\n", $meta[$meta['id'][0]][0]);
+				$theme = get_header_data($lines);
+				echo '<p>';
+				echo !empty($theme['version']) ? esc_attr($theme['version']) : '&#8211;';
+				echo '</p>';
+			} else {
+				echo '&#8211;';
+			}
+		}
 
 		// Content for identifier column.
 		if ($column === 'identifier') {
