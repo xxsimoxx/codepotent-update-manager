@@ -106,7 +106,7 @@ class TransientInspector {
 				esc_html__('Transients', 'codepotent-update-manager'),
 				'manage_options',
 				'update-manager-transient-inspector',
-				[$this, 'render_transient_inspector'],
+				[$this, 'render_transient_inspector']
 				);
 
 	}
@@ -244,7 +244,7 @@ class TransientInspector {
 				'<strong>',
 				'</strong>',
 				date('F j, Y', $timestamp),
-				date('h:i:s a', $timestamp),
+				date('h:i:s a', $timestamp)
 				);
 
 		// Container.
