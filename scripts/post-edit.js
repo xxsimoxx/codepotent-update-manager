@@ -120,9 +120,9 @@ jQuery(document).ready(function($) {
 		text += 'Author:            \n';
 		text += 'Author URI:        \n';
 		if (component === 'plugin') {
-			text += 'Theme URI:        \n';
-		} else {
 			text += 'Plugin URI:       \n';
+		} else {
+			text += 'Theme URI:        \n';
 		}
 		text += 'Download link:     \n';
 		text += 'Donate link:       \n';
@@ -167,9 +167,9 @@ jQuery(document).ready(function($) {
 		text += 'Author:            Code Potent\n';
 		text += 'Author URI:        https://codepotent.com\n';
 		if (component === 'plugin') {
-			text += 'Theme URI:         https://codepotent.com/classicpress/themes/theme-name/\n';
-		} else {
 			text += 'Plugin URI:        https://codepotent.com/classicpress/plugins/plugin-name\n';
+		} else {
+			text += 'Theme URI:         https://codepotent.com/classicpress/themes/theme-name/\n';
 		}
 		text += 'Download link:     #\n';
 		text += 'Donate link:       #\n';
