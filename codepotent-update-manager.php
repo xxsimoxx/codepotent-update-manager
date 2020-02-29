@@ -143,7 +143,7 @@ class UpdateManager {
 			'update-manager',
 			[$this, 'render_overview'],
 			'dashicons-update',
-			apply_filters(PLUGIN_PREFIX.'_menu_pos', null),
+			apply_filters(PLUGIN_PREFIX.'_menu_pos', null)
 			);
 
 		// Remove the duplicated entry.

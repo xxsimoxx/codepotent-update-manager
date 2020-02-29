@@ -1450,7 +1450,7 @@ function markup_header_data_legend($component) {
 			$component,
 			'<code>5.6.40</code>',
 			'<code>7</code>',
-			'<code>7.2</code>',
+			'<code>7.2</code>'
 			);
 	$markup .= '</p>';
 
@@ -1462,7 +1462,7 @@ function markup_header_data_legend($component) {
 			esc_html__('The minimum version of ClassicPress required by the %s, for example, %s or %s.', 'codepotent-update-manager'),
 			$component,
 			'<code>1.0.0</code>',
-			'<code>1.1.2</code>',
+			'<code>1.1.2</code>'
 			);
 	$markup .= '</p>';
 
@@ -1533,7 +1533,7 @@ function markup_header_data_legend($component) {
 			esc_html__('The license type under which the %s is released, for example, %s or %s.', 'codepotent-update-manager'),
 			$component,
 			'<code>GPLv2</code>',
-			'<code>GPLv3</code>',
+			'<code>GPLv3</code>'
 			);
 	$markup .= '</p>';
 
