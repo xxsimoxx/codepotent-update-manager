@@ -31,3 +31,32 @@
 	vertical-align:top;
 	padding-top:25px;
 	}
+#codepotent-update-manager-cheat-sheet {
+	display:none;
+	}
+#codepotent-update-manager-cheat-sheet p {
+	padding-top:5px;
+	}
+#codepotent-update-manager-cheat-sheet p {
+	margin:0 0 15px;
+	padding:0;
+	}
+#codepotent-update-manager-cheat-sheet blockquote {
+	margin:25px 0;
+	background:#fafafa;
+	padding:10px;
+	border-left: 3px solid #337dc1;
+	}
+#codepotent-update-manager-cheat-sheet blockquote p {
+	margin:0;
+	}
+#codepotent-update-manager-cheat-sheet p em.required {
+	color:#f00;
+	}
+#codepotent-update-manager-cheat-sheet p em.optional {
+	color:#72777c;
+	}
+#codepotent-update-manager-cheat-sheet .codepotent-update-manager-property-name {
+	font-weight:bold;
+	}
+	

@@ -94,6 +94,13 @@ jQuery(document).ready(function($) {
 		return false;
 	});
 
+	// Click handler for toggling the cheat sheet.
+	$('#codepotent-update-manager-toggle-cheat-sheet').click(function(e) {
+		// Prevent default link behavior.
+		e.preventDefault();
+		$('#codepotent-update-manager-cheat-sheet').toggle('slow', function(){});
+	});
+
 	// Return only the bare minimum requirements.
 	function get_default_text_requirements(component) {
 		var text = '';
@@ -120,9 +127,9 @@ jQuery(document).ready(function($) {
 		text += 'Author:            \n';
 		text += 'Author URI:        \n';
 		if (component === 'plugin') {
-			text += 'Plugin URI:       \n';
+			text += 'Plugin URI:        \n';
 		} else {
-			text += 'Theme URI:        \n';
+			text += 'Theme URI:         \n';
 		}
 		text += 'Download link:     \n';
 		text += 'Donate link:       \n';

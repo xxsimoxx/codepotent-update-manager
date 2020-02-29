@@ -343,6 +343,12 @@ class ThemeEndpoint {
 		echo '			</td>'."\n";
 		echo '		</tr>'."\n";
 
+		// Cheat sheet.
+		echo '		<tr style="border-top:1px solid #ccc;">';
+		echo '			<th scope="row"><label><a href="#" id="'.PLUGIN_SLUG.'-toggle-cheat-sheet">'.esc_html__('Need a cheat sheet?', 'codepotent-update-manager').'</a></label></th>'."\n";
+		echo '			<td>'.markup_header_data_legend('theme').'</td>';
+		echo '		</tr>';
+
 		// Close table.
 		echo '	</tbody>'."\n";
 		echo '</table>'."\n";
