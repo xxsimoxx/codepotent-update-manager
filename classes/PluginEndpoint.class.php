@@ -576,11 +576,15 @@ class PluginEndpoint {
 
 		// Content for version column.
 		if ($column === 'version') {
-			$lines = explode("\n", $meta[$meta['id'][0]][0]);
-			$plugin = get_header_data($lines);
-			echo '<p>';
-			echo !empty($plugin['version']) ? esc_attr($plugin['version']) : '&#8211;';
-			echo '</p>';
+			if (!empty($meta['id'])) {
+				$lines = explode("\n", $meta[$meta['id'][0]][0]);
+				$plugin = get_header_data($lines);
+				echo '<p>';
+				echo !empty($plugin['version']) ? esc_attr($plugin['version']) : '&#8211;';
+				echo '</p>';
+			} else {
+				echo '&#8211;';
+			}
 		}
 
 		// Content for identifier column.
