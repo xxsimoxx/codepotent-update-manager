@@ -33,8 +33,6 @@ if (!defined('ABSPATH')) {
 
 class PluginEndpoint {
 
-	var $component = 'plugin';
-
 	/**
 	 * Constructor.
 	 *
@@ -79,6 +77,12 @@ class PluginEndpoint {
 
 		// Add custom columns.
 		add_filter('manage_'.CPT_FOR_PLUGIN_ENDPOINTS.'_posts_columns', [$this, 'filter_columns']);
+
+		// Declare which custom columns are sortable.
+		add_filter('manage_edit-'.CPT_FOR_PLUGIN_ENDPOINTS.'_sortable_columns', [$this, 'filter_columns_sortable']);
+
+		// Make sortable the things.
+		add_action('pre_get_posts', [$this, 'filter_columns_sort_field']);
 
 		// Populate custom columns.
 		add_action('manage_'.CPT_FOR_PLUGIN_ENDPOINTS.'_posts_custom_column', [$this, 'filter_columns_content'], 10, 2);
@@ -353,8 +357,6 @@ class PluginEndpoint {
 		echo '	</tbody>'."\n";
 		echo '</table>'."\n";
 
-//		echo markup_header_data_legend('plugin');
-
 		// Add a nonce.
 		wp_nonce_field(PLUGIN_PREFIX.'_metabox_nonce', PLUGIN_PREFIX.'_metabox_nonce');
 
@@ -548,10 +550,56 @@ class PluginEndpoint {
 			'cb'            => '<input type="checkbox">',
 			'title'         => esc_html__('Plugin', 'codepotent-update-manager'),
 			'version'       => esc_html__('Version', 'codepotent-update-manager'),
+			'download'      => '<span class="dashicons dashicons-download" style="display:inline;margin:10px 0 0;color:#72777c;opacity:.65;"></span>',
 			'identifier'    => esc_html__('Identifier', 'codepotent-update-manager'),
 			'test_urls'     => esc_html__('Test URLs', 'codepotent-update-manager'),
 			'notifications' => esc_html__('Notifications', 'codepotent-update-manager'),
-			'date'          => esc_html__('Date', 'codepotent-update-manager')
+			'modified'      => esc_html__('Updated', 'codepotent-update-manager'),
+		];
+
+	}
+
+	/**
+	 * Filter custom sort field
+	 *
+	 * This method handles sorting for filtered columns that don't map to a post
+	 * type field.
+	 *
+	 * @author John Alarcon
+	 *
+	 * @since 2.0.0
+	 *
+	 * @param object $wp_query
+	 */
+	public function filter_columns_sort_field($wp_query) {
+
+		// Dealing with this post type? Reset the query.
+		if ($wp_query->get('post_type') === CPT_FOR_PLUGIN_ENDPOINTS) {
+			if ($wp_query->get('orderby') === 'identifier') {
+				$wp_query->set('orderby', 'meta_value');
+				$wp_query->set('meta_key', 'id');
+			}
+		}
+
+	}
+
+	/**
+	 * Declare sortable columns
+	 *
+	 * This method desclares which custom columns are sortable.
+	 *
+	 * @author John Alarcon
+	 *
+	 * @since 2.0.0
+	 *
+	 * @return array Map of sortable columns.
+	 */
+	public function filter_columns_sortable() {
+
+		return [
+			'identifier' => 'identifier',
+			'title'      => 'title',
+			'modified'   => 'modified'
 		];
 
 	}
@@ -571,6 +619,9 @@ class PluginEndpoint {
 	 */
 	public function filter_columns_content($column, $post_id) {
 
+		// Bring current post into scope.
+		global $post;
+
 		// Get meta data for given post id.
 		$meta = get_post_meta($post_id);
 
@@ -579,33 +630,87 @@ class PluginEndpoint {
 			if (!empty($meta['id'])) {
 				$lines = explode("\n", $meta[$meta['id'][0]][0]);
 				$plugin = get_header_data($lines);
-				echo '<p>';
 				echo !empty($plugin['version']) ? esc_attr($plugin['version']) : '&#8211;';
-				echo '</p>';
 			} else {
 				echo '&#8211;';
 			}
 		}
 
+		// Content for download column.
+		if ($column === 'download') {
+			if (!empty($meta['id'])) {
+				$lines = explode("\n", $meta[$meta['id'][0]][0]);
+				$header = get_header_data($lines);
+			}
+			$style = 'opacity:.3;';
+			$title = esc_html__('No Download Available', 'codepotent-update-manager');
+			if (!empty($header['download_link'])) {
+				echo '<a href="'.$header['download_link'].'">';
+				$style = '';
+				$title = esc_html__('Download', 'codepotent-update-manager');
+			}
+			echo '<span style="'.$style.'" title="'.$title.'" class="dashicons dashicons-download"></span>';
+			if (!empty($header['download_link'])) {
+				echo '</a>';
+			}
+		}
+
 		// Content for identifier column.
 		if ($column === 'identifier') {
-			echo '<p>';
 			echo !empty($meta['id'][0]) ? esc_attr($meta['id'][0]) : '&#8211;';
-			echo '</p>';
 		}
 
 		// Content for test URLs column.
 		if ($column === 'test_urls') {
-			echo '<p>';
-			echo !empty($meta['test_urls'][0]) ? esc_attr($meta['test_urls'][0]) : '&#8211;';
-			echo '</p>';
+			$test_urls = get_allowed_test_urls($post_id);
+			if (!empty($test_urls[0])) {
+				foreach ($test_urls as $test_url) {
+					$truncated_url = (strlen($test_url)<=30) ? $test_url : substr($test_url, 0, 27).'...';
+					echo '<a href="'.$test_url.'" title="'.$test_url.'">'.$truncated_url.'</a><br>';
+				}
+			} else {
+				echo '&#8211;';
+			}
 		}
 
-		// Contnet for notifications column.
+		// Content for notifications column.
 		if ($column === 'notifications') {
-			echo '<p>';
-			echo !empty($meta['notifications'][0]) ? str_replace(',', '<br>', esc_attr($meta['notifications'][0])) : '&#8211;';
-			echo '</p>';
+			// Get notification targe emails/urls.
+			$targets = get_notification_targets($post_id);
+			// No notification targets? Bail.
+			if (empty($targets['email']) && empty($targets['url'])) {
+				echo '&#8211;';
+				return;
+			}
+			// Notification email addresses present? Print links.
+			if (!empty($targets['email']) && !empty($meta['id'])) {
+				$lines = explode("\n", $meta[$meta['id'][0]][0]);
+				$header = get_header_data($lines);
+				$subject = get_notification_email_subject($header);
+				$body = get_notification_email_body($header);
+				foreach ($targets['email'] as $email) {
+					$email_url = get_notification_email_url($email, $subject, $body);
+					$truncated_email = (strlen($email)<=20) ? $email : substr($email, 0, 17).'...';
+					echo '<span class="dashicons dashicons-email"></span> ';
+					echo '<a href="'.esc_url($email_url).'">'.esc_html($truncated_email).'</a>';
+					echo '<br>';
+				}
+			}
+			// Notification URLs present? Print links.
+			if (!empty($targets['url'])) {
+				foreach ($targets['url'] as $test_url) {
+					$truncated_url = (strlen($test_url)<=20) ? $test_url : substr($test_url, 0, 17).'...';
+					echo '<span class="dashicons dashicons-admin-site"></span> ';
+					echo '<a href="'.$test_url.'">'.$truncated_url.'</a>';
+				}
+			}
+		}
+
+		// Content for last-updated column.
+		if ($column === 'modified') {
+			$timedate_parts = explode(' ', $post->post_modified);
+			$date_parts = explode('-', $timedate_parts[0]);
+			echo $date_parts[0].'/'.$date_parts[1].'/'.$date_parts[2];
 		}
 
 	}

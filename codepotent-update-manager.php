@@ -262,7 +262,7 @@ class UpdateManager {
 	public function enqueue_admin_scripts($hook_suffix) {
 
 		// In a potentioal view for this plugin?
-		if (in_array($hook_suffix, ['post.php', 'post-new.php'])) {
+		if (in_array($hook_suffix, ['edit.php', 'post.php', 'post-new.php'])) {
 
 			// Is view related to this plugin? Enqueue the assets.
 			if (in_array($post_type = get_post_type(), [CPT_FOR_PLUGIN_ENDPOINTS, CPT_FOR_THEME_ENDPOINTS], true)) {

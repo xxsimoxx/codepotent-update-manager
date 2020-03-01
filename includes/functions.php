@@ -180,6 +180,65 @@ function get_notification_targets($post_id) {
 
 }
 
+function get_notification_email_subject($header) {
+
+	// Default email subject.
+	$subject = sprintf(
+		esc_html__('Report: %s v%s', 'codepotent-update-manager'),
+		$header['name'],
+		$header['version']);
+
+	// Allow users to filter the value.
+	$subject = apply_filters(PLUGIN_PREFIX.'_notification_email_subject', $subject);
+
+	// Ensure sanitization; in case it was filtered.
+	$subject = sanitize_text_field($subject);
+
+	// Return the string.
+	return $subject;
+
+}
+
+function get_notification_email_body($header) {
+
+	// Initialization.
+	$lines = [];
+
+	// Add default text.
+	$lines[] = sprintf(
+		esc_html__('We greatly appreciate your help with testing this update for *%s*! Please let us know how it went.', 'codepotent-update-manager'),
+		$header['name'])."\r\n\r\n";
+
+	// Say thanks.
+	$lines[] = esc_html__('Thanks!', 'codepotent-update-manager')."\r\n\r\n";
+
+	// Allow users to filter the email body.
+	$lines = apply_filters(PLUGIN_PREFIX.'notification_email_subject', $lines);
+
+	// Glue together the lines.
+	$body = implode('', $lines);
+
+	// Final sanitization; in case it was filtered.
+	$body = sanitize_textarea_field($body);
+
+	// Return the string.
+	return $body;
+
+}
+
+function get_notification_email_url($email, $subject, $body) {
+
+	$args = [];
+	$args[] = 'subject='.rawurlencode($subject);
+	$args[] = 'body='.rawurlencode($body);
+	$mail_url = 'mailto:'.$email.'?';
+	foreach ($args as $arg) {
+		$mail_url .= $arg.'&';
+	}
+
+	return $mail_url;
+}
+
 /**
  * Plugin information endpoint data
  *
