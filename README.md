@@ -1,4 +1,4 @@
-> Painlessly push updates to your ClassicPress plugin users! Serve updates from GitHub, your own site, or somewhere in the cloud. 100% integrated with the ClassicPress update process; super-slim and performant. Incredibly easy!
+> Painlessly push updates to your ClassicPress plugin and theme users! Serve updates from GitHub, your own site, or somewhere in the cloud. 100% integrated with the ClassicPress update process; super-slim and performant. Incredibly easy!
 
 ### Always use the **[latest release](https://github.com/codepotent/php-error-log-viewer/releases/latest)** on production sites! 
 
