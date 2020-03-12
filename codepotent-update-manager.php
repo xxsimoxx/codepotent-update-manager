@@ -398,7 +398,7 @@ class UpdateManager {
 				foreach ($GLOBALS['submenu'][PLUGIN_SHORT_SLUG] as $item) {
 					if ($screen->base === PLUGIN_SHORT_SLUG.'_page_'.$item[2]) {
 						$extension = apply_filters(PLUGIN_PREFIX.'_extension_footer_'.$item[2], '');
-						$extension = wp_kses($extension, ['a' => ['href', 'title']]);
+						$extension = wp_kses($extension, ['a' => ['href'=>[], 'title'=>[]]]);
 						break;
 					}
 				}
