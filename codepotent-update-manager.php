@@ -388,10 +388,30 @@ class UpdateManager {
 		$screen = get_current_screen();
 
 		// Change footer text only for this plugin's screens.
-		if (strstr($screen->base, PLUGIN_SHORT_SLUG) ||
-			$screen->post_type === CPT_FOR_PLUGIN_ENDPOINTS ||
-			$screen->post_type === CPT_FOR_THEME_ENDPOINTS) {
-				$text = '<span id="footer-thankyou" style="vertical-align:text-bottom;"><a href="'.VENDOR_PLUGIN_URL.'/" title="'.PLUGIN_DESCRIPTION.'">'.PLUGIN_NAME.'</a> '.PLUGIN_VERSION.' &#8212; by <a href="'.VENDOR_HOME_URL.'" title="'.VENDOR_TAGLINE.'"><img src="'.VENDOR_WORDMARK_URL.'" alt="'.VENDOR_TAGLINE.'" style="height:1.02em;vertical-align:sub !important;"></a></span>';
+		if (strstr($screen->base, PLUGIN_SHORT_SLUG) || $screen->post_type === CPT_FOR_PLUGIN_ENDPOINTS || $screen->post_type === CPT_FOR_THEME_ENDPOINTS) {
+			// Contain the footer.
+			$text = '<span id="footer-thankyou" style="vertical-align:text-bottom;">';
+			// Code Potent info and link.
+			$text .= '<a href="'.VENDOR_PLUGIN_URL.'/" title="'.PLUGIN_DESCRIPTION.'">'.PLUGIN_NAME.'</a> '.PLUGIN_VERSION.' &#8211; by <a href="'.VENDOR_HOME_URL.'" title="'.VENDOR_TAGLINE.'"><img src="'.VENDOR_WORDMARK_URL.'" alt="'.VENDOR_TAGLINE.'" style="height:1.02em;vertical-align:sub !important;"></a>';
+			// Allow extension authors to add their credit link to the footer.
+			if (!empty($GLOBALS['submenu'][PLUGIN_SHORT_SLUG])) {
+				foreach ($GLOBALS['submenu'][PLUGIN_SHORT_SLUG] as $item) {
+					if ($screen->base === PLUGIN_SHORT_SLUG.'_page_'.$item[2]) {
+						$extension = apply_filters(PLUGIN_PREFIX.'_extension_footer_'.$item[2], '');
+						$extension = wp_kses($extension, ['a' => ['href', 'title']]);
+						break;
+					}
+				}
+			}
+
+			// If there's an author credit, insert a separator, add the credit.
+			if (!empty($extension)) {
+				$text .= ' | '.$extension;
+			}
+
+			// Close the container.
+			$text .= '</span>';
+
 		}
 
 		// Return the footer text.
