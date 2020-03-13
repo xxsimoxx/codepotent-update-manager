@@ -4,7 +4,7 @@
  * -----------------------------------------------------------------------------
  * Plugin Name: Update Manager
  * Description: Painlessly push updates to your ClassicPress plugin users! Serve updates from GitHub, your own site, or somewhere in the cloud. 100% integrated with the ClassicPress update process; slim and performant.
- * Version: 2.0.0-rc1
+ * Version: 2.0.0-rc3
  * Author: Code Potent
  * Author URI: https://codepotent.com
  * Plugin URI: https://codepotent.com/classicpress/plugins
@@ -148,6 +148,19 @@ class UpdateManager {
 
 		// Remove the duplicated entry.
 		remove_submenu_page('update-manager', 'update-manager');
+
+	}
+
+	/**
+	 * Menu placeholder.
+	 *
+	 * @author John Alarcon
+	 *
+	 * @since 1.0.0
+	 */
+	public function render_overview() {
+
+		return;
 
 	}
 

@@ -213,7 +213,7 @@ function get_notification_email_body($header) {
 	$lines[] = esc_html__('Thanks!', 'codepotent-update-manager')."\r\n\r\n";
 
 	// Allow users to filter the email body.
-	$lines = apply_filters(PLUGIN_PREFIX.'notification_email_subject', $lines);
+	$lines = apply_filters(PLUGIN_PREFIX.'notification_email_body', $lines);
 
 	// Glue together the lines.
 	$body = implode('', $lines);

@@ -26,7 +26,7 @@
 namespace CodePotent\UpdateManager;
 
 // EDIT: URL where Update Manager is installed; with trailing slash!
-const UPDATE_SERVER = 'https://codepotent.com/';
+const UPDATE_SERVER = 'https://updates.codepotent.com/';
 
 // EDIT: plugin or theme?
 const UPDATE_TYPE = 'plugin';
@@ -68,6 +68,14 @@ class UpdateClient {
 	 * it again.
 	 */
 	private $cp_latest_version = '4.9.99';
+
+	/**
+	 * Cached component data
+	 *
+	 * As pre_set_site_transient_update_plugins is called twice by ClassicPress,
+	 * saving this value will cut an extra HTTP call to the update server.
+	 */
+	private $component_data = '';
 
 	/**
 	 * Constructor.
@@ -180,9 +188,9 @@ class UpdateClient {
 		// Only need this JS/CSS on the plugin admin page and updates page.
 		if ($screen->base === 'plugins' || $screen->base === 'plugin-install') {
 			// This will make the jQuery below work with various languages.
-			$text1 = esc_html__('Compatible up to:', 'codepotent-update-manager');
-			$text2 = esc_html__('Reviews', 'codepotent-update-manager');
-			$text3 = esc_html__('Read all reviews', 'codepotent-update-manager');
+			$text1 = esc_html__('Compatible up to:');
+			$text2 = esc_html__('Reviews');
+			$text3 = esc_html__('Read all reviews');
 			// Swap "Compatible up to: 4.9.99" with "Compatible up to: 1.1.1".
 			echo '<script>jQuery(document).ready(function($){$("ul li:contains(4.9.99)").html("<strong>'.$text1.'</strong> '.$this->cp_latest_version.'");$(".fyi h3:contains('.$text2.')").hide();$(".fyi p:contains('.$text3.')").hide();});</script>'."\n";
 			// Styles for the modal window.
@@ -372,7 +380,7 @@ class UpdateClient {
 		// Add the link to the plugin's or theme's row, if not already existing.
 		if ($this->identifier === $component_file) {
 			$anchors_string = implode('', $component_meta);
-			$anchor_text = esc_html__('View details', 'codepotent-update-manager');
+			$anchor_text = esc_html__('View details');
 			if (!preg_match('|(\<a[ \s\S\d]*)('.$anchor_text.')(<\/a>)|', $anchors_string)) {
 				$component_meta[] = '<a class="thickbox" href="'.admin_url('/'.$this->config['type'].'-install.php?tab='.$this->config['type'].'-information&'.$this->config['type'].'='.$this->server_slug.'&TB_iframe=true&width=600&height=550').'">'.$anchor_text.'</a>';
 			}
@@ -556,6 +564,11 @@ class UpdateClient {
 	 */
 	private function get_component_data($action, $component='') {
 
+		// If component data exists, no need to requery; return that data.
+		if (!empty($this->component_data)) {
+			return $this->component_data;
+		}
+
 		// Localize the platform version.
 		global $cp_version;
 
@@ -652,8 +665,11 @@ class UpdateClient {
 		// Get the response body; decode it as an array.
 		$data = json_decode(trim(wp_remote_retrieve_body($raw_response)), true);
 
+		// Set retrieved data to the object for reuse elsewhere.
+		$this->component_data = is_array($data) ? $data : [];
+
 		// Return the reponse body.
-		return is_array($data) ? $data : [];
+		return $this->component_data;
 
 	}
 
