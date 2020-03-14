@@ -771,7 +771,7 @@ function prevent_unauthorized_pending_updates($request, $endpoint, $data) {
 	}
 
 	// Alter data to provide info only without update.
-	$data['version'] = $request['version'];
+	$data['version'] = !empty($request['version']) ? $request['version'] : '';
 	$data['requires_php'] = '';
 	$data['requires'] = '';
 	$data['tested'] = '';
