@@ -1201,6 +1201,9 @@ function markup_testing_notice($targets, $identifier, $header) {
 			'<strong>',
 			'</strong>');
 
+	// Initialization.
+	$note1 = $note2 = '';
+	
 	// Texts for nudging users toward notifying you about any issues.
 	if (!empty($mail_url) && !empty($http_url)) {
 		$note2 = sprintf(
