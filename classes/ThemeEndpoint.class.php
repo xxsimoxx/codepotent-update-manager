@@ -31,14 +31,14 @@ if (!defined('ABSPATH')) {
 	die();
 }
 
-class PluginEndpoint {
+class ThemeEndpoint {
 
 	/**
 	 * Constructor.
 	 *
 	 * @author John Alarcon
 	 *
-	 * @since 1.0.0
+	 * @since 2.0.0
 	 */
 	public function __construct() {
 
@@ -53,7 +53,7 @@ class PluginEndpoint {
 	 *
 	 * @author John Alarcon
 	 *
-	 * @since 1.0.0
+	 * @since 2.0.0
 	 */
 	public function init() {
 
@@ -76,16 +76,16 @@ class PluginEndpoint {
 		add_action('save_post', [$this, 'update_meta_box_primary'], 10, 2);
 
 		// Add custom columns.
-		add_filter('manage_'.CPT_FOR_PLUGIN_ENDPOINTS.'_posts_columns', [$this, 'filter_columns']);
+		add_filter('manage_'.CPT_FOR_THEME_ENDPOINTS.'_posts_columns', [$this, 'filter_columns']);
 
 		// Declare which custom columns are sortable.
-		add_filter('manage_edit-'.CPT_FOR_PLUGIN_ENDPOINTS.'_sortable_columns', [$this, 'filter_columns_sortable']);
+		add_filter('manage_edit-'.CPT_FOR_THEME_ENDPOINTS.'_sortable_columns', [$this, 'filter_columns_sortable']);
 
 		// Make sortable the things.
 		add_action('pre_get_posts', [$this, 'filter_columns_sort_field']);
 
 		// Populate custom columns.
-		add_action('manage_'.CPT_FOR_PLUGIN_ENDPOINTS.'_posts_custom_column', [$this, 'filter_columns_content'], 10, 2);
+		add_action('manage_'.CPT_FOR_THEME_ENDPOINTS.'_posts_custom_column', [$this, 'filter_columns_content'], 10, 2);
 
 	}
 
@@ -96,23 +96,23 @@ class PluginEndpoint {
 	 *
 	 * @author John Alarcon
 	 *
-	 * @since 1.0.0
+	 * @since 2.0.0
 	 */
 	public function register_custom_post_type() {
 
 		// Labels for the post type.
 		$labels = [
-			'name'                => esc_html__('Update Manager &#8211; Plugins', 'codepotent-update-manager'),
-			'singular_name'       => esc_html__('Plugin Endpoint',                'codepotent-update-manager'),
-			'add_new'             => esc_html__('New Plugin',                     'codepotent-update-manager'),
-			'add_new_item'        => esc_html__('Add New Plugin',                 'codepotent-update-manager'),
-			'edit_item'           => esc_html__('Edit Plugin',                    'codepotent-update-manager'),
-			'new_item'            => esc_html__('New Plugin',                     'codepotent-update-manager'),
-			'all_items'           => esc_html__('Plugins',                        'codepotent-update-manager'),
-			'view_item'           => esc_html__('View Plugin',                    'codepotent-update-manager'),
-			'search_items'        => esc_html__('Search Plugins',                 'codepotent-update-manager'),
-			'not_found'           => esc_html__('No Plugins found',               'codepotent-update-manager'),
-			'not_found_in_trash'  => esc_html__('No Plugins found in Trash',      'codepotent-update-manager'),
+			'name'                => esc_html__('Update Manager &#8211; Themes', 'codepotent-update-manager'),
+			'singular_name'       => esc_html__('Theme Endpoint',                'codepotent-update-manager'),
+			'add_new'             => esc_html__('New Theme',                     'codepotent-update-manager'),
+			'add_new_item'        => esc_html__('Add New Theme',                 'codepotent-update-manager'),
+			'edit_item'           => esc_html__('Edit Theme',                    'codepotent-update-manager'),
+			'new_item'            => esc_html__('New Theme',                     'codepotent-update-manager'),
+			'all_items'           => esc_html__('Themes',                        'codepotent-update-manager'),
+			'view_item'           => esc_html__('View Theme',                    'codepotent-update-manager'),
+			'search_items'        => esc_html__('Search Themes',                 'codepotent-update-manager'),
+			'not_found'           => esc_html__('No Themes found',               'codepotent-update-manager'),
+			'not_found_in_trash'  => esc_html__('No Themes found in Trash',      'codepotent-update-manager'),
 			'menu_name'           => esc_html__('Update Manager',                 'codepotent-update-manager'),
 		];
 
@@ -127,10 +127,10 @@ class PluginEndpoint {
 		];
 
 		// Last call!
-		$args = apply_filters(CPT_FOR_PLUGIN_ENDPOINTS.'_post_type_args', $args);
+		$args = apply_filters(CPT_FOR_THEME_ENDPOINTS.'_post_type_args', $args);
 
 		// Register the post type.
-		register_post_type(CPT_FOR_PLUGIN_ENDPOINTS, $args);
+		register_post_type(CPT_FOR_THEME_ENDPOINTS, $args);
 
 	}
 
@@ -142,7 +142,7 @@ class PluginEndpoint {
 	 *
 	 * @author John Alarcon
 	 *
-	 * @since 1.0.0
+	 * @since 2.0.0
 	 *
 	 * @param string $placeholder
 	 * @param object $post
@@ -151,8 +151,8 @@ class PluginEndpoint {
 	public function filter_cpt_title_placeholder($placeholder, $post) {
 
 		// Dealing with this CPT? Swap the text!
-		if (get_post_type($post) === CPT_FOR_PLUGIN_ENDPOINTS) {
-			$placeholder = esc_html__('Plugin Name or Title', 'codepotent-update-manager');
+		if (get_post_type($post) === CPT_FOR_THEME_ENDPOINTS) {
+			$placeholder = esc_html__('Theme Name or Title', 'codepotent-update-manager');
 		}
 
 		// Return the possibly updated text.
@@ -168,7 +168,7 @@ class PluginEndpoint {
 	 *
 	 * @author John Alarcon
 	 *
-	 * @since 1.0.0
+	 * @since 2.0.0
 	 *
 	 * @param array $actions
 	 * @param object $post
@@ -177,10 +177,10 @@ class PluginEndpoint {
 	public function filter_post_row_actions($actions, $post) {
 
 		// Dealing with this CPT? Add links!
-		if (get_post_type() === CPT_FOR_PLUGIN_ENDPOINTS) {
+		if (get_post_type() === CPT_FOR_THEME_ENDPOINTS) {
 			if ($post->post_status === 'publish' || $post->post_status === 'pending') {
 				$identifier = get_post_meta($post->ID, 'id', true);
-				$actions['endpoint'] = '<a href="'.site_url().'?'.ENDPOINT_VARIABLE.'=plugin_information&plugin='.esc_attr($identifier).'&site_url='.site_url().'">'.esc_html__('View Endpoint', 'codepotent-update-manager').'</a>';
+				$actions['endpoint'] = '<a href="'.site_url().'?'.ENDPOINT_VARIABLE.'=theme_information&theme='.esc_attr($identifier).'&site_url='.site_url().'">'.esc_html__('View Endpoint', 'codepotent-update-manager').'</a>';
 			}
 		}
 
@@ -195,7 +195,7 @@ class PluginEndpoint {
 	 *
 	 * @author John Alarcon
 	 *
-	 * @since 1.0.0
+	 * @since 2.0.0
 	 */
 	public function register_meta_box_primary() {
 
@@ -204,7 +204,7 @@ class PluginEndpoint {
 			PLUGIN_SLUG.'-primary-editor',
 			esc_html__('Endpoint Details', 'codepotent-update-manager'),
 			[$this, 'render_meta_box_primary'],
-			[CPT_FOR_PLUGIN_ENDPOINTS],
+			[CPT_FOR_THEME_ENDPOINTS],
 			'normal',
 			'high'
 			);
@@ -227,9 +227,9 @@ class PluginEndpoint {
 	 */
 	public function get_default_endpoint_content() {
 
-		$content = esc_html__('=== Plugin Name Here ===', 'codepotent-update-manager')."\n\n";
-		$content .= esc_html__('Version:           1.0.0', 'codepotent-update-manager')."\n";
-		$content .= esc_html__('Requires:          1.0.0', 'codepotent-update-manager')."\n";
+		$content = esc_html__('=== Theme Name Here ===', 'codepotent-update-manager')."\n\n";
+		$content .= esc_html__('Version:           2.0.0', 'codepotent-update-manager')."\n";
+		$content .= esc_html__('Requires:          2.0.0', 'codepotent-update-manager')."\n";
 		$content .= esc_html__('Download link:     https://', 'codepotent-update-manager')."\n\n";
 		$content .= esc_html__('== Description ==', 'codepotent-update-manager')."\n\n";
 		$content .= esc_html__('This text displays in the modal windows; it is required. Write something!', 'codepotent-update-manager')."\n\n";
@@ -245,7 +245,7 @@ class PluginEndpoint {
 	 *
 	 * @author John Alarcon
 	 *
-	 * @since 1.0.0
+	 * @since 2.0.0
 	 *
 	 * @param object $post
 	 */
@@ -280,11 +280,11 @@ class PluginEndpoint {
 		echo '			<th scope="row"><label for="'.PLUGIN_SLUG.'-identifier">'.esc_html__('Endpoint Identifier', 'codepotent-update-manager').'</label></th>'."\n";
 		echo '			<td>'."\n";
 		echo '				<p>'."\n";
-		echo '					<input class="widefat" name="'.PLUGIN_PREFIX.'_plugin_id" type="text" id="'.PLUGIN_SLUG.'-identifier" value="'.esc_attr($identifier).'" placeholder="'.esc_attr('plugin-folder/plugin-file.php').'">'."\n";
+		echo '					<input class="widefat" name="'.PLUGIN_PREFIX.'_theme_id" type="text" id="'.PLUGIN_SLUG.'-identifier" value="'.esc_attr($identifier).'" placeholder="'.esc_attr('theme-folder-name').'">'."\n";
 		echo '				</p>'."\n";
 		echo '				<p class="description">';
 		echo sprintf(
-				esc_html__('Use the form %sfolder-name/file-name.php%s to match that of your plugin.', 'codepotent-update-manager'),
+				esc_html__('Use the form %stheme-folder-name%s to match that of your theme.', 'codepotent-update-manager'),
 					'<code>',
 					'</code>');
 		echo '</p>'."\n";
@@ -293,15 +293,15 @@ class PluginEndpoint {
 
 		// Text editor.
 		echo '		<tr>'."\n";
-		echo '			<th scope="row"><label for="'.PLUGIN_SLUG.'-editor">'.esc_html__('Plugin Details', 'codepotent-update-manager').'</label></th>'."\n";
+		echo '			<th scope="row"><label for="'.PLUGIN_SLUG.'-editor">'.esc_html__('Theme Details', 'codepotent-update-manager').'</label></th>'."\n";
 		echo '			<td>'."\n";
 		echo '				<p>';
 		echo '					<textarea class="widefat" rows="20" name="'.PLUGIN_PREFIX.'_editor" id="'.PLUGIN_SLUG.'-editor">'.esc_textarea($content).'</textarea>';
 		echo '				</p>'."\n";
 		echo '				<p class="description">';
 		echo sprintf(
-			esc_html__('Describe the plugin as if writing a %sreadme.txt%s file for it. Basic %smarkdown%s is supported. HTML and PHP tags are stripped.', 'codepotent-update-manager'),
-				'<a href="https://developer.wordpress.org/plugins/wordpress-org/how-your-readme-txt-works/">',
+			esc_html__('Describe the theme as if writing a %sreadme.txt%s file for it. Basic %smarkdown%s is supported. HTML and PHP tags are stripped.', 'codepotent-update-manager'),
+				'<a href="https://make.wordpress.org/themes/handbook/review/required/#format-of-the-readme-txt-file">',
 				'</a>',
 				'<a href="https://github.com/adam-p/markdown-here/wiki/Markdown-Cheatsheet">',
 			'</a>'
@@ -324,7 +324,7 @@ class PluginEndpoint {
 				'</code>');
 		echo '&nbsp;';
 		echo sprintf(
-				esc_html__('URLs must point to the root of a ClassicPress installation. A couple examples might be: %1$shttps://www.yoursite.com%2$s or %1$shttps://www.yoursite.com/your/path/to/classicpress%2$s. The plugin related to this endpoint must also be installed and active there.', 'codepotent-update-manager'),
+				esc_html__('URLs must point to the root of a ClassicPress installation. A couple examples might be: %1$shttps://www.yoursite.com%2$s or %1$shttps://www.yoursite.com/your/path/to/classicpress%2$s. The theme related to this endpoint must also be installed and active there.', 'codepotent-update-manager'),
 				'<code>',
 				'</code>');
 		echo '</p>'."\n";
@@ -350,7 +350,7 @@ class PluginEndpoint {
 		// Cheat sheet.
 		echo '		<tr style="border-top:1px solid #ccc;">';
 		echo '			<th scope="row"><label><a href="#" id="'.PLUGIN_SLUG.'-toggle-cheat-sheet">'.esc_html__('Need a cheat sheet?', 'codepotent-update-manager').'</a></label></th>'."\n";
-		echo '			<td>'.markup_header_data_legend('plugin').'</td>';
+		echo '			<td>'.markup_header_data_legend('theme').'</td>';
 		echo '		</tr>';
 
 		// Close table.
@@ -369,7 +369,7 @@ class PluginEndpoint {
 	 *
 	 * @author John Alarcon
 	 *
-	 * @since 1.0.0
+	 * @since 2.0.0
 	 *
 	 * @param integer $post_id
 	 * @param object $post
@@ -377,7 +377,7 @@ class PluginEndpoint {
 	 */
 	public function update_meta_box_primary($post_id, $post) {
 
-		// Remove any PHP tags prior to stripping data to prevent corruption.
+		// Replace PHP tags prior to stripping data; prevents data corruption.
 		if (!empty($_POST[PLUGIN_PREFIX.'_editor'])) {
 			$_POST[PLUGIN_PREFIX.'_editor'] = str_replace(['<?','? >'], ['&lt;?','?&gt;',], $_POST[PLUGIN_PREFIX.'_editor']);
 		}
@@ -396,7 +396,7 @@ class PluginEndpoint {
 		}
 
 		// No expected data submitted? Bail.
-		if (empty($request[PLUGIN_PREFIX.'_plugin_id']) || ! wp_verify_nonce($request[PLUGIN_PREFIX.'_metabox_nonce'], PLUGIN_PREFIX.'_metabox_nonce')) {
+		if (empty($request[PLUGIN_PREFIX.'_theme_id']) || ! wp_verify_nonce($request[PLUGIN_PREFIX.'_metabox_nonce'], PLUGIN_PREFIX.'_metabox_nonce')) {
 			return $post_id;
 		}
 
@@ -406,7 +406,7 @@ class PluginEndpoint {
 		}
 
 		// Not a post of this type? Bail.
-		if ($post->post_type !== CPT_FOR_PLUGIN_ENDPOINTS) {
+		if ($post->post_type !== CPT_FOR_THEME_ENDPOINTS) {
 			return $post_id;
 		}
 
@@ -414,12 +414,12 @@ class PluginEndpoint {
 		$identifier = get_post_meta($post->ID, 'id', true);
 
 		// User has no permission? Bail.
-		if (!current_user_can('update_plugins', $post_id)) {
+		if (!current_user_can('update_themes', $post_id)) {
 			return $post_id;
 		}
 
 		// Identifier.
-		$new_identifier = isset($request[PLUGIN_PREFIX.'_plugin_id']) ? sanitize_text_field($request[PLUGIN_PREFIX.'_plugin_id']) : '';
+		$new_identifier = isset($request[PLUGIN_PREFIX.'_theme_id']) ? sanitize_text_field($request[PLUGIN_PREFIX.'_theme_id']) : '';
 
 		// Ensure data stays in sync if identifier changes.
 		if ($new_identifier !== $identifier) {
@@ -476,7 +476,7 @@ class PluginEndpoint {
 	 *
 	 * @author John Alarcon
 	 *
-	 * @since 1.0.0
+	 * @since 2.0.0
 	 */
 	public function register_meta_box_autocompleters() {
 
@@ -485,7 +485,7 @@ class PluginEndpoint {
 			PLUGIN_SLUG.'-autocompleters',
 			esc_html__('Auto Complete', 'codepotent-update-manager'),
 			[$this, 'render_meta_box_autocompleters'],
-			[CPT_FOR_PLUGIN_ENDPOINTS],
+			[CPT_FOR_THEME_ENDPOINTS],
 			'side',
 			'default'
 			);
@@ -501,7 +501,7 @@ class PluginEndpoint {
 	 *
 	 * @author John Alarcon
 	 *
-	 * @since 1.0.0
+	 * @since 2.0.0
 	 */
 	public function render_meta_box_autocompleters() {
 
@@ -514,7 +514,7 @@ class PluginEndpoint {
 		echo '</p>';
 
 		// CTA button.
-		echo '<p><button type="button" class="button button-secondary button-hero widefat without-examples" data-component="plugin">';
+		echo '<p><button type="button" class="button button-secondary button-hero widefat without-examples" data-component="theme">';
 		echo esc_html__('Insert Template', 'codepotent-update-manager');
 		echo '</button></p>';
 
@@ -522,9 +522,9 @@ class PluginEndpoint {
 		echo '<p>';
 		echo sprintf(
 			esc_html__('You can insert a %sfully completed example%s to get your bearings, or even just see the %sabsolute minimum requirements%s.', 'codepotent-update-manager'),
-			'<a href="#" class="with-examples" data-component="plugin">',
+			'<a href="#" class="with-examples" data-component="theme">',
 			'</a>',
-			'<a href="#" class="reqs-only" data-component="plugin">',
+			'<a href="#" class="reqs-only" data-component="theme">',
 			'</a>');
 		echo '</p>';
 
@@ -538,7 +538,7 @@ class PluginEndpoint {
 	 *
 	 * @author John Alarcon
 	 *
-	 * @since 1.0.0
+	 * @since 2.0.0
 	 *
 	 * @param array $columns
 	 * @return array
@@ -548,7 +548,7 @@ class PluginEndpoint {
 		// No unsets; just redo the columns and return.
 		return [
 			'cb'            => '<input type="checkbox">',
-			'title'         => esc_html__('Plugin', 'codepotent-update-manager'),
+			'title'         => esc_html__('Theme', 'codepotent-update-manager'),
 			'version'       => esc_html__('Version', 'codepotent-update-manager'),
 			'download'      => '<span class="dashicons dashicons-download" style="display:inline;margin:10px 0 0;color:#72777c;opacity:.65;"></span>',
 			'identifier'    => esc_html__('Identifier', 'codepotent-update-manager'),
@@ -574,7 +574,7 @@ class PluginEndpoint {
 	public function filter_columns_sort_field($wp_query) {
 
 		// Dealing with this post type? Reset the query.
-		if ($wp_query->get('post_type') === CPT_FOR_PLUGIN_ENDPOINTS) {
+		if ($wp_query->get('post_type') === CPT_FOR_THEME_ENDPOINTS) {
 			if ($wp_query->get('orderby') === 'identifier') {
 				$wp_query->set('orderby', 'meta_value');
 				$wp_query->set('meta_key', 'id');
@@ -612,7 +612,7 @@ class PluginEndpoint {
 	 *
 	 * @author John Alarcon
 	 *
-	 * @since 1.0.0
+	 * @since 2.0.0
 	 *
 	 * @param string $column
 	 * @param integer $post_id
@@ -629,8 +629,8 @@ class PluginEndpoint {
 		if ($column === 'version') {
 			if (!empty($meta['id'])) {
 				$lines = explode("\n", $meta[$meta['id'][0]][0]);
-				$plugin = get_header_data($lines);
-				echo !empty($plugin['version']) ? esc_attr($plugin['version']) : '&#8211;';
+				$theme = get_header_data($lines);
+				echo !empty($theme['version']) ? esc_attr($theme['version']) : '&#8211;';
 			} else {
 				echo '&#8211;';
 			}

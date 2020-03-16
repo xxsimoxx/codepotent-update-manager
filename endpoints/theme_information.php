@@ -12,7 +12,7 @@
  * implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. Full
  * text of the license is available at https://www.gnu.org/licenses/gpl-2.0.txt.
  * -----------------------------------------------------------------------------
- * Copyright 2020, Code Potent
+ * Copyright 2019 - Code Potent
  * -----------------------------------------------------------------------------
  *           ____          _      ____       _             _
  *          / ___|___   __| | ___|  _ \ ___ | |_ ___ _ __ | |_
@@ -32,7 +32,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Query for component details.
-$data = component_information('plugin');
+$data = component_information('theme');
 
 // Prevent caching.
 nocache_headers();

@@ -4,7 +4,7 @@
  * -----------------------------------------------------------------------------
  * Plugin Name: Update Manager
  * Description: Painlessly push updates to your ClassicPress plugin users! Serve updates from GitHub, your own site, or somewhere in the cloud. 100% integrated with the ClassicPress update process; slim and performant.
- * Version: 1.0.1
+ * Version: 2.0.0-rc3
  * Author: Code Potent
  * Author URI: https://codepotent.com
  * Plugin URI: https://codepotent.com/classicpress/plugins
@@ -16,7 +16,7 @@
  * implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. Full
  * text of the license is available at https://www.gnu.org/licenses/gpl-2.0.txt.
  * -----------------------------------------------------------------------------
- * Copyright © 2019 - Code Potent
+ * Copyright 2020, Code Potent
  * -----------------------------------------------------------------------------
  *           ____          _      ____       _             _
  *          / ___|___   __| | ___|  _ \ ___ | |_ ___ _ __ | |_
@@ -72,6 +72,9 @@ class UpdateManager {
 		// Register the autoload method.
 		spl_autoload_register(__CLASS__.'::autoload_classes');
 
+		// Register admin menu item.
+		add_action('admin_menu', [$this, 'register_admin_menu']);
+
 		// Register privacy page content.
 		add_action('admin_init', [$this, 'register_privacy_disclosure']);
 
@@ -105,11 +108,59 @@ class UpdateManager {
 		// Plugin deletion.
 		register_uninstall_hook(__FILE__, [__CLASS__, 'uninstall_plugin']);
 
-		// Run the main plugin code; the CPT.
+		// Setup the plugin endpoint post types.
 		new PluginEndpoint;
+
+		// Setup the theme endpoint post types.
+		new ThemeEndpoint;
+
+		// Setup the transient inspector, if added. For development.
+		if (class_exists(__NAMESPACE__.'\TransientInspector')) {
+			new TransientInspector;
+		}
 
 		// Run the update client.
 		UpdateClient::get_instance();
+
+	}
+
+	/**
+	 * Register admin menu.
+	 *
+	 * This provides a hook for extensions to inject themselves into the menu.
+	 *
+	 * @author John Alarcon
+	 *
+	 * @since 2.0.0
+	 */
+	public function register_admin_menu() {
+
+		// Add primary menu functionality.
+		add_menu_page(
+			esc_html__('Update Manager', 'codepotent-update-manager'),
+			esc_html__('Update Manager', 'codepotent-update-manager'),
+			'manage_options',
+			'update-manager',
+			[$this, 'render_overview'],
+			'dashicons-update',
+			apply_filters(PLUGIN_PREFIX.'_menu_pos', null)
+			);
+
+		// Remove the duplicated entry.
+		remove_submenu_page('update-manager', 'update-manager');
+
+	}
+
+	/**
+	 * Menu placeholder.
+	 *
+	 * @author John Alarcon
+	 *
+	 * @since 1.0.0
+	 */
+	public function render_overview() {
+
+		return;
 
 	}
 
@@ -169,18 +220,18 @@ class UpdateManager {
 			to ensure compliance with GDPR.%6$s
 
 			%7$sIn an effort to keep you up to date with latest developments, we
-			will periodically make updates available for our plugins. When your
+			will periodically make updates available for our products. When your
 			site checks in for updates, your URL is sent along with the request.
 			This allows us to whitelist certain domains to get updates early,
 			allowing for test-runs to make sure there are no issues, before
-			rolling out the update to all users. Additionally, if the plugin
+			rolling out the update to all users. Additionally, if the product
 			contains image assets such as a banner, icon, or screenshots, those
 			URLs will also be transmitted with the request. These URLs are added
 			to the latest data (in memory) and reflected back to your site as a
 			data array that the core system can use to populate the various
 			related views. This allows images to be served from your own server,
 			speeding up the process a bit. Finally, the data from the header
-			section of plugin files is transmitted to help in the determination
+			section of product files is transmitted to help in the determination
 			of whether an update is available or not. All data sent withing the
 			request is used on a per-request basis and is not stored in any way.
 			However, while no transmitted data is stored, requests to a server
@@ -223,12 +274,29 @@ class UpdateManager {
 	 */
 	public function enqueue_admin_scripts($hook_suffix) {
 
-		// Assets for CPT-related views.
-		if (in_array($hook_suffix, ['post.php', 'post-new.php'])) {
-			wp_enqueue_style(PLUGIN_SLUG.'-post-edit', URL_STYLES.'/post-edit.css', [], time());
-			wp_enqueue_script(PLUGIN_SLUG.'-post-edit', URL_SCRIPTS.'/post-edit.js', ['jquery'], time());
-			wp_localize_script(PLUGIN_SLUG.'-post-edit', 'slug', PLUGIN_SLUG);
-			wp_localize_script(PLUGIN_SLUG.'-post-edit', 'confirmation', esc_html__('You are about to completely replace all the text currently in the editor! Is this what you meant to do?', 'codepotent-update-manager'));
+		// In a potentioal view for this plugin?
+		if (in_array($hook_suffix, ['edit.php', 'post.php', 'post-new.php'])) {
+
+			// Is view related to this plugin? Enqueue the assets.
+			if (in_array($post_type = get_post_type(), [CPT_FOR_PLUGIN_ENDPOINTS, CPT_FOR_THEME_ENDPOINTS], true)) {
+
+				// Dealing with a plugin or theme endpoint?
+				$component = 'plugin';
+				if ($post_type === CPT_FOR_THEME_ENDPOINTS) {
+					$component = 'theme';
+				}
+
+				// Enqueue assests.
+				wp_enqueue_style(PLUGIN_SLUG.'-post-edit-'.$component, URL_STYLES.'/post-edit.css', [], time());
+				wp_enqueue_script(PLUGIN_SLUG.'-post-edit-'.$component, URL_SCRIPTS.'/post-edit.js', ['jquery'], time());
+
+				// Localize JS variables.
+				wp_localize_script(PLUGIN_SLUG.'-post-edit-'.$component, 'slug', PLUGIN_SLUG);
+				wp_localize_script(PLUGIN_SLUG.'-post-edit-'.$component, 'endpoint_notice', esc_html__('You must set the Endpoint Identifier before you can save the record.', 'codepotent-update-manager'));
+				wp_localize_script(PLUGIN_SLUG.'-post-edit-'.$component, 'confirmation', esc_html__('You are about to completely replace all the text currently in the editor! Is this what you meant to do?', 'codepotent-update-manager'));
+
+			}
+
 		}
 
 	}
@@ -276,7 +344,9 @@ class UpdateManager {
 		// Array of permissed endpoint requests.
 		$endpoints = [
 			'query_plugins',
+			'query_themes',
 			'plugin_information',
+			'theme_information',
 		];
 
 		// If the query is for an endpoint, reset template path for JSON.
@@ -292,7 +362,8 @@ class UpdateManager {
 	/**
 	 * Filter for plugin list table action links.
 	 *
-	 * Adds a link to the plugin's admin page.
+	 * Add a link to the plugin admin row. This is for Update Manager's entry in
+	 * the admin table, not for plugin update endpoints.
 	 *
 	 * @author John Alarcon
 	 *
@@ -329,9 +400,31 @@ class UpdateManager {
 		// Get current screen.
 		$screen = get_current_screen();
 
-		// Are we on this post type's screen? If so, change the footer text.
-		if ($screen->post_type === CPT_FOR_PLUGIN_ENDPOINTS) {
-			$text = '<span id="footer-thankyou"><a href="'.CODE_POTENT_HOME_URL.'/classicpress/plugins/" title="'.CODE_POTENT_TITLE_ALT.'">'.PLUGIN_NAME.'</a> '.PLUGIN_VERSION.' — A <a href="'.CODE_POTENT_HOME_URL.'" title="'.CODE_POTENT_TITLE_ALT.'"><img src="'.CODE_POTENT_LOGO_SVG_WORDS.'" alt="'.CODE_POTENT_TITLE_ALT.'" style="height:1em;vertical-align:sub;"></a> Production</span>';
+		// Change footer text only for this plugin's screens.
+		if (strstr($screen->base, PLUGIN_SHORT_SLUG) || $screen->post_type === CPT_FOR_PLUGIN_ENDPOINTS || $screen->post_type === CPT_FOR_THEME_ENDPOINTS) {
+			// Contain the footer.
+			$text = '<span id="footer-thankyou" style="vertical-align:text-bottom;">';
+			// Code Potent info and link.
+			$text .= '<a href="'.VENDOR_PLUGIN_URL.'/" title="'.PLUGIN_DESCRIPTION.'">'.PLUGIN_NAME.'</a> '.PLUGIN_VERSION.' &#8211; by <a href="'.VENDOR_HOME_URL.'" title="'.VENDOR_TAGLINE.'"><img src="'.VENDOR_WORDMARK_URL.'" alt="'.VENDOR_TAGLINE.'" style="height:1.02em;vertical-align:sub !important;"></a>';
+			// Allow extension authors to add their credit link to the footer.
+			if (!empty($GLOBALS['submenu'][PLUGIN_SHORT_SLUG])) {
+				foreach ($GLOBALS['submenu'][PLUGIN_SHORT_SLUG] as $item) {
+					if ($screen->base === PLUGIN_SHORT_SLUG.'_page_'.$item[2]) {
+						$extension = apply_filters(PLUGIN_PREFIX.'_extension_footer_'.$item[2], '');
+						$extension = wp_kses($extension, ['a' => ['href'=>[], 'title'=>[]]]);
+						break;
+					}
+				}
+			}
+
+			// If there's an author credit, insert a separator, add the credit.
+			if (!empty($extension)) {
+				$text .= ' | '.$extension;
+			}
+
+			// Close the container.
+			$text .= '</span>';
+
 		}
 
 		// Return the footer text.
@@ -342,7 +435,8 @@ class UpdateManager {
 	/**
 	 * Plugin activation.
 	 *
-	 * This method is included for completeness.
+	 * This method converts RC1 post types to RC2+ format to accommodate support
+	 * for theme updates.
 	 *
 	 * @author John Alarcon
 	 *
@@ -406,7 +500,7 @@ class UpdateManager {
 		}
 
 		// Set a transient to flag that plugin was upgraded.
-		set_transient(PLUGIN_IDENTIFIER.'_upgraded', 1, 60);
+		set_transient(PLUGIN_IDENTIFIER.'_upgraded', 1, 120);
 
 	}
 
@@ -439,9 +533,9 @@ class UpdateManager {
 	}
 
 	/**
-	 * Plugin uninstallation/deletion.
+	 * Plugin uninstall.
 	 *
-	 * This method is included for completeness.
+	 * Cleanup activities for plugin deletion.
 	 *
 	 * @author John Alarcon
 	 *

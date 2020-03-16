@@ -13,7 +13,7 @@
  * implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. Full
  * text of the license is available at https://www.gnu.org/licenses/gpl-2.0.txt.
  * -----------------------------------------------------------------------------
- * Copyright © 2019 - Code Potent
+ * Copyright 2019 - Code Potent
  * -----------------------------------------------------------------------------
  *           ____          _      ____       _             _
  *          / ___|___   __| | ___|  _ \ ___ | |_ ___ _ __ | |_
@@ -49,15 +49,30 @@ function get_request() {
 	// Ensure the raw data can't be used elsewhere.
 	unset($_REQUEST);
 
+	// Endpoint variable not set? Bail.
+	if (empty($request[ENDPOINT_VARIABLE])) {
+		return [];
+	}
+
+	// Endpoint invalid? Bail.
+	if (empty($request['plugin']) && empty($request['theme'])) {
+		return [];
+	}
+
+	// Type of update being checked for.
+	$type = (!empty($request['plugin'])) ? 'plugin' : 'theme';
+
 	// No requesting URL submitted (ie, RC1)? Get it from user agent instead.
 	if (empty($request['site_url'])) {
 		// User agent messed with? Bail.
 		if (empty($_SERVER['HTTP_USER_AGENT'])) {
 			return [];
 		}
+		// Split the user agent parts.
+		$user_agent_parts = explode(';', $_SERVER['HTTP_USER_AGENT']);
 		// Extract url from string: ClassicPress/x.x.x; https://www.the-site.com
-		$site_url = trim(array_pop(explode(';', $_SERVER['HTTP_USER_AGENT'])));
-		// No URL? Bail.
+		$site_url = trim(array_pop($user_agent_parts));
+		// Still no URL? Bail.
 		if (empty($site_url) || !filter_var($site_url, FILTER_VALIDATE_URL)) {
 			return [];
 		}
@@ -66,15 +81,18 @@ function get_request() {
 	}
 
 	// Add a nonce.
-	$request['nonce'] = wp_create_nonce('plugin_request_'.$request['site_url']);
+	$request['nonce'] = wp_create_nonce($type.'_request_'.$request['site_url']);
+
+	// Post type to retrieve.
+	$post_type = ($type==='plugin' ? CPT_FOR_PLUGIN_ENDPOINTS : CPT_FOR_THEME_ENDPOINTS);
 
 	// Get the endpoint, if it exists, whether published or pending.
 	$endpoint = get_posts([
-		'post_type' => CPT_FOR_PLUGIN_ENDPOINTS,
+		'post_type' => $post_type,
 		'post_status' => ['pending', 'publish'],
 		'posts_per_page' => 1,
 		'meta_key' => 'id',
-		'meta_value' => esc_attr($request['plugin']),
+		'meta_value' => esc_attr($request[$type]),
 	]);
 
 	// No data to work with? Bail.
@@ -85,8 +103,11 @@ function get_request() {
 	// Add the endpoint to the request.
 	$request['endpoint'] = $endpoint;
 
-	// Allow for filtering the incoming request.
+	// Deprecated as of 2.0.0; allow for filtering the incoming request.
 	$request = apply_filters(PLUGIN_PREFIX.'_filter_request', $request);
+
+	// New in 2.0.0; allow for filtering the incoming request.
+	$request = apply_filters(PLUGIN_PREFIX.'_filter_'.$type.'_request', $request);
 
 	// Return the cleansed request.
 	return $request;
@@ -159,109 +180,67 @@ function get_notification_targets($post_id) {
 
 }
 
-/**
- * Query for plugin updates.
- *
- * @author John Alarcon
- *
- * @since 1.0.0
- *
- * @return mixed
- */
-function query_plugins() {
+function get_notification_email_subject($header) {
 
-	// Initialize the return variable.
-	$data = [];
+	// Default email subject.
+	$subject = sprintf(
+		esc_html__('Report: %s v%s', 'codepotent-update-manager'),
+		$header['name'],
+		$header['version']);
 
-	// Get the request.
-	$request = get_request();
+	// Allow users to filter the value.
+	$subject = apply_filters(PLUGIN_PREFIX.'_notification_email_subject', $subject);
 
-	// No requesting URL submitted? Bail.
-	if (empty($request['site_url'])) {
-		return $data;
-	}
+	// Ensure sanitization; in case it was filtered.
+	$subject = sanitize_text_field($subject);
 
-	// No plugin id submitted? Bail.
-	if (empty($request['plugin'])) {
-		return $data;
-	}
-
-	// Nonce seems suspicious? Bail.
-	if (!wp_verify_nonce($request['nonce'], 'plugin_request_'.$request['site_url'])) {
-		return $data;
-	}
-
-	// Get plugin identifier; ie, plugin-name/plugin-name.php
-	$identifier = !empty($request['plugin']) ? $request['plugin'] : false;
-
-	// Get plugins' header data passed in from remote server.
-	$remote_headers = !empty($request['plugins']) ? $request['plugins'] : [];
-
-	// Is the identifier or plugin list unworkable? Bail.
-	if (!$identifier || empty($remote_headers)) {
-		return $data;
-	}
-
-	// Ensure there's a remote version number present, or bail.
-	if (empty($remote_version = $remote_headers[$identifier]['Version'])) {
-		return $data;
-	}
-
-	// Surface the endpoint object.
-	$endpoint = $request['endpoint'];
-
-	// Get plugin data string.
-	$content = get_post_meta($endpoint[0]->ID, $identifier, true);
-
-	// No worthwhile result? Bail.
-	if (is_wp_error($content) || empty($content)) {
-		return $data;
-	}
-
-	// Parse the plugin data into usable data.
-	$latest = parse_plugin_data($identifier, $endpoint, $request, $content);
-
-	// Get latest version number, or bail.
-	if (empty($latest['version'])) {
-		return $data;
-	}
-
-	// Setup default return; contains empty array; meaning no update.
-	$data[$identifier] = [];
-
-	// Check if remote version is less than latest version.
-	if (version_compare($remote_version, $latest['version'], '<')) {
-
-		// Remote version was less? Mmmkay, capture any found details.
-		$data[$identifier] = [
-			'slug'           => dirname($identifier),
-			'plugin'         => $identifier,
-			'new_version'    => isset($latest['version'])        ? $latest['version'] : '',
-			'package'        => isset($latest['download_link'])  ? $latest['download_link'] : '',
-			'requires'       => isset($latest['requires'])       ? $latest['requires'] : '',
-			'tested'         => isset($latest['tested'])         ? $latest['tested'] : '',
-			'requires_php'   => isset($latest['requires_php'])   ? $latest['requires_php'] : '',
-			'updated'        => isset($latest['updated'])        ? $latest['updated'] : '',
-			'upgrade_notice' => isset($latest['upgrade_notice']) ? $latest['upgrade_notice'] : '',
-		];
-
-	}
-
-	// Only whitelisted sites get Pending (ie, can test) updates.
-	if ($endpoint[0]->post_status === 'pending') {
-		$can_test_updates = get_allowed_test_urls($endpoint[0]->ID);
-		if (!in_array($request['site_url'], $can_test_updates, true)) {
-			$data[$identifier] = [];
-		}
-	}
-
-	// Return empty array (no update) or populated array (update data) as JSON.
-	return apply_filters(PLUGIN_PREFIX.'_query_plugins', $data, $request);
+	// Return the string.
+	return $subject;
 
 }
 
+function get_notification_email_body($header) {
+
+	// Initialization.
+	$lines = [];
+
+	// Add default text.
+	$lines[] = sprintf(
+		esc_html__('We greatly appreciate your help with testing this update for *%s*! Please let us know how it went.', 'codepotent-update-manager'),
+		$header['name'])."\r\n\r\n";
+
+	// Say thanks.
+	$lines[] = esc_html__('Thanks!', 'codepotent-update-manager')."\r\n\r\n";
+
+	// Allow users to filter the email body.
+	$lines = apply_filters(PLUGIN_PREFIX.'notification_email_body', $lines);
+
+	// Glue together the lines.
+	$body = implode('', $lines);
+
+	// Final sanitization; in case it was filtered.
+	$body = sanitize_textarea_field($body);
+
+	// Return the string.
+	return $body;
+
+}
+
+function get_notification_email_url($email, $subject, $body) {
+
+	$args = [];
+	$args[] = 'subject='.rawurlencode($subject);
+	$args[] = 'body='.rawurlencode($body);
+	$mail_url = 'mailto:'.$email.'?';
+	foreach ($args as $arg) {
+		$mail_url .= $arg.'&';
+	}
+
+	return $mail_url;
+}
+
 /**
- * Plugin informaiton endpoint data
+ * Plugin information endpoint data
  *
  * This function retrieves the data that is required to fully populate the modal
  * update window with header images, tabbed navigation and content, and data for
@@ -269,11 +248,11 @@ function query_plugins() {
  *
  * @author John Alarcon
  *
- * @since 1.0.0
+ * @since 2.0.0
  *
  * @return array|mixed
  */
-function plugin_information() {
+function component_information($component) {
 
 	// Initialize the return variable.
 	$data = [];
@@ -292,17 +271,22 @@ function plugin_information() {
 	}
 
 	// No plugin id submitted? Bail.
-	if (empty($request['plugin'])) {
+	if (empty($request['plugin']) && empty($request['theme'])) {
 		return $data;
 	}
 
+	// Whitelist the component type.
+	if ($component !== 'plugin') {
+		$component = 'theme';
+	}
+
 	// Nonce seems suspicious? Bail.
-	if (!wp_verify_nonce($request['nonce'], 'plugin_request_'.$request['site_url'])) {
+	if (!wp_verify_nonce($request['nonce'], $component.'_request_'.$request['site_url'])) {
 		return $data;
 	}
 
 	// Get the plugin textual data.
-	$content = get_post_meta($request['endpoint'][0]->ID, $request['plugin'], true);
+	$content = get_post_meta($request['endpoint'][0]->ID, $request[$component], true);
 
 	// No worthwhile result? Bail.
 	if (is_wp_error($content) || empty($content)) {
@@ -310,19 +294,194 @@ function plugin_information() {
 	}
 
 	// Turn the plugin content into usable data.
-	$data = parse_plugin_data($request['plugin'], $request['endpoint'], $request, $content);
+	$data = parse_component_data($request[$component], $request['endpoint'], $request, $content);
 
 	// Only whitelisted sites get links to Pending (ie, can test) updates.
 	if ($request['endpoint'][0]->post_status === 'pending') {
 		$can_test_updates = get_allowed_test_urls($request['endpoint'][0]->ID);
 		if (!in_array($request['site_url'], $can_test_updates, true)) {
 			$data['download_link'] = '';
+			$data['url'] = '';
 		}
 	}
 
 	// Return the assembled data to the JSON endpoint.
-	return apply_filters(PLUGIN_PREFIX.'_plugin_information', $data, $request);
+	return apply_filters(PLUGIN_PREFIX.'_'.$component.'_information', $data, $request);
 
+}
+
+/**
+ * Plugin information endpoint data
+ *
+ * This function retrieves the data that is required to fully populate the modal
+ * update window with header images, tabbed navigation and content, and data for
+ * populating the sidebar.
+ *
+ * @author John Alarcon
+ *
+ * @since 1.0.0
+ *
+ * @deprecated 2.0.0 Use component_information() function instead.
+ *
+ * @return array|mixed
+ */
+function plugin_information() {
+	return component_information('plugin');
+}
+
+/**
+ * Query for plugin or theme updates.
+ *
+ * @author John Alarcon
+ *
+ * @since 2.0.0
+ *
+ * @return mixed
+ */
+function query_components($component) {
+
+	// Get the request.
+	$request = get_request();
+
+	// Ensure a valid component type.
+	if ($component !== 'plugin') {
+		$component = 'theme';
+	}
+
+	// Data returned in case of any issues.
+	$nothing = [
+		'notice' => sprintf(
+			esc_html__('No %s data available', 'codepotent-update-manager'),
+			$component)
+	];
+
+	// No requesting URL submitted? Bail.
+	if (empty($request['site_url'])) {
+		return $nothing;
+	}
+
+	// No plugin id submitted? Bail.
+	if (empty($request[$component])) {
+		return $nothing;
+	}
+
+	// Nonce seems suspicious? Bail.
+	if (!wp_verify_nonce($request['nonce'], $component.'_request_'.$request['site_url'])) {
+		return $nothing;
+	}
+
+	// Get plugin identifier; ie, plugin-name/plugin-name.php
+	$identifier = !empty($request[$component]) ? $request[$component] : false;
+
+	// Get plugins' header data passed in from remote server.
+	$remote_headers = !empty($request[$component.'s']) ? $request[$component.'s'] : [];
+
+	// Is the identifier or plugin list unworkable? Bail.
+	if (!$identifier && empty($remote_headers)) {
+		return $nothing;
+	}
+
+	// If querying via a URL in the browser, bail.
+	if (empty($remote_headers[$identifier])) {
+		return $nothing;
+	}
+
+	// Ensure there's a remote version number present, or bail.
+	if (empty($remote_version = $remote_headers[$identifier]['Version'])) {
+		return $nothing;
+	}
+
+	// Surface the endpoint object.
+	$endpoint = $request['endpoint'];
+
+	// Get plugin data string.
+	$content = get_post_meta($endpoint[0]->ID, $identifier, true);
+
+	// No worthwhile result? Bail.
+	if (is_wp_error($content) || empty($content)) {
+		return $nothing;
+	}
+
+	// Get latest data for the component.
+	$latest = parse_component_data($identifier, $endpoint, $request, $content);
+
+	// Get latest version number, or bail.
+	if (empty($latest['version'])) {
+		return $nothing;
+	}
+
+	// Setup default return; contains empty array; meaning no update.
+	$data[$identifier] = [];
+
+	// Check if remote version is less than latest version.
+	if (version_compare($remote_version, $latest['version'], '<')) {
+
+		if ($component === 'plugin') {
+			// Remote version was less? Mmmkay, capture any found details.
+			$data[$identifier] = [
+					'type'           => $component,
+					'id'             => $identifier,
+					'identifier'     => $identifier,
+					'slug'           => dirname($identifier),
+					'plugin'         => $identifier,
+					'new_version'    => isset($latest['version'])        ? $latest['version'] : '',
+					'package'        => isset($latest['download_link'])  ? $latest['download_link'] : '',
+					'url'            => isset($latest['plugin_uri'])     ? $latest['plugin_uri'] : '',
+					'requires'       => isset($latest['requires'])       ? $latest['requires'] : '',
+					'tested'         => isset($latest['tested'])         ? $latest['tested'] : '',
+					'requires_php'   => isset($latest['requires_php'])   ? $latest['requires_php'] : '',
+					'updated'        => isset($latest['updated'])        ? $latest['updated'] : '',
+					'upgrade_notice' => isset($latest['upgrade_notice']) ? $latest['upgrade_notice'] : '',
+			];
+
+		} else if ($component === 'theme') {
+			// Remote version was less? Mmmkay, capture any found details.
+			$data[$identifier] = [
+					'type'           => $component,
+					'id'             => $identifier,
+					'identifier'     => $identifier,
+					'slug'           => $identifier,
+					'theme'          => $identifier,
+					'new_version'    => isset($latest['version'])        ? $latest['version'] : '',
+					'package'        => isset($latest['download_link'])  ? $latest['download_link'] : '',
+					'url'            => isset($latest['theme_uri'])      ? $latest['theme_uri'] : '',
+					'requires'       => isset($latest['requires'])       ? $latest['requires'] : '',
+					'tested'         => isset($latest['tested'])         ? $latest['tested'] : '',
+					'requires_php'   => isset($latest['requires_php'])   ? $latest['requires_php'] : '',
+					'updated'        => isset($latest['updated'])        ? $latest['updated'] : '',
+					'upgrade_notice' => isset($latest['upgrade_notice']) ? $latest['upgrade_notice'] : '',
+			];
+
+		}
+
+	}
+
+	// Only whitelisted sites get Pending (ie, can test) updates.
+	if ($endpoint[0]->post_status === 'pending') {
+		$can_test_updates = get_allowed_test_urls($endpoint[0]->ID);
+		if (!in_array($request['site_url'], $can_test_updates, true)) {
+			$data[$identifier] = [];
+		}
+	}
+
+	// Return empty array (no update) or populated array (update data) as JSON.
+	return apply_filters(PLUGIN_PREFIX.'_query_'.$component.'s', $data, $request);
+
+}
+
+/**
+ * Query for plugin updates.
+ *
+ * @author John Alarcon
+ *
+ * @since 1.0.0
+ *
+ * @deprecated 2.0.0 Use query_components() function instead.
+ *
+ * @return mixed
+ */
+function query_plugins() {
+	return query_components('plugin');
 }
 
 /**
@@ -336,7 +495,7 @@ function plugin_information() {
  *
  * @author John Alarcon
  *
- * @since 1.0.0
+ * @since 2.0.0
  *
  * @param string $identifier
  * @param object $nedpoint_post
@@ -344,7 +503,13 @@ function plugin_information() {
  * @param string $content
  * @return array
  */
-function parse_plugin_data($identifier, $endpoint, $request, $content) {
+function parse_component_data($identifier, $endpoint, $request, $content) {
+
+	// Surface the component type.
+	$component = 'plugin';
+	if (!strstr($request[ENDPOINT_VARIABLE], 'plugin')) {
+		$component = 'theme';
+	}
 
 	// Initialize the return variable.
 	$data = [];
@@ -362,22 +527,22 @@ function parse_plugin_data($identifier, $endpoint, $request, $content) {
 
 	// Get markup for the Description tab.
 	if (!empty($sections['description'])) {
-		$sections['description'] = markup_plugin_generic_section($sections['description']);
+		$sections['description'] = markup_generic_section($sections['description']);
 	}
 
 	// Get markup for the FAQ tab.
 	if (!empty($sections['faq'])) {
-		$sections['faq'] = markup_plugin_generic_section($sections['faq']);
+		$sections['faq'] = markup_generic_section($sections['faq']);
 	}
 
 	// Get markup for the Installation tab.
 	if (!empty($sections['installation'])) {
-		$sections['installation'] = markup_plugin_generic_section($sections['installation']);
+		$sections['installation'] = markup_generic_section($sections['installation']);
 	}
 
 	// Get markup for the Screenshots tab.
 	if (!empty($sections['screenshots']) && !empty($request['screenshot_urls'])) {
-		$sections['screenshots'] = markup_plugin_screenshots($request['screenshot_urls'], $sections['screenshots']);
+		$sections['screenshots'] = markup_screenshots($request['screenshot_urls'], $sections['screenshots']);
 	} else {
 		unset($sections['screenshots']);
 	}
@@ -385,25 +550,25 @@ function parse_plugin_data($identifier, $endpoint, $request, $content) {
 	// Get markup for the Reviews tab.
 	if (!empty($sections['reviews'])) {
 		$reviews_raw = $sections['reviews'];
-		$sections['reviews'] = markup_plugin_reviews($sections['reviews']);
+		$sections['reviews'] = markup_reviews($sections['reviews']);
 	}
 
 	// Get markup for the Other Notes tab.
 	if (!empty($sections['other_notes'])) {
-		$sections['other_notes'] = markup_plugin_generic_section($sections['other_notes']);
+		$sections['other_notes'] = markup_generic_section($sections['other_notes']);
 	}
 
 	// Get markup for the Reviews tab.
 	if (!empty($sections['changelog'])) {
-		$sections['changelog'] = markup_plugin_generic_section($sections['changelog']);
+		$sections['changelog'] = markup_generic_section($sections['changelog']);
 	}
 
 	// Get markup for the Upgrade Notices; tab and plugin row.
 	if (!empty($sections['upgrade_notice'])) {
 		// Plugin row; no markup; string.
-		$data['upgrade_notice'] = markup_plugin_upgrade_notice($sections['upgrade_notice'], true);
+		$data['upgrade_notice'] = markup_upgrade_notice($sections['upgrade_notice'], true);
 		// Modal window; markdown array converted to markup string.
-		$sections['upgrade_notice'] = markup_plugin_upgrade_notice($sections['upgrade_notice']);
+		$sections['upgrade_notice'] = markup_upgrade_notice($sections['upgrade_notice']);
 	} else {
 		// No upgrade notice? No need for a tab.
 		unset($sections['upgrade_notice']);
@@ -422,26 +587,41 @@ function parse_plugin_data($identifier, $endpoint, $request, $content) {
 
 	// Flag indicating plugin is not hosted via ClassicPress plugin directory.
 	$data['external']        = true;
+
 	// Unique identifier; ie, my-plugin-dir/my-plugin-file.php
 	$data['identifier']      = $identifier;
-	// Plugin directory; ie, my-plugin-dir
-	$data['slug']            = dirname($identifier);
+
+	// Plugin/theme slug; ie, my-theme-name or my-plugin-name/my-plugin-name.php
+	if ($component === 'plugin') {
+		$data['slug']        = dirname($identifier);
+	} else if ($component === 'theme') {
+		$data['slug']        = $identifier;
+	}
+
 	// Display name for the plugin.
 	$data['name']            = !empty($header['name'])          ? $header['name'] : '';
+
 	// Plugin description.
 	$data['description']     = !empty($sections['description']) ? $sections['description'] : '';
+
 	// Plugin version; ie, 1.2.3
 	$data['version']         = !empty($header['version'])       ? $header['version'] : '';
+
 	// Text domain; ie, my-plugin-name
 	$data['text_domain']     = !empty($header['text_domain'])   ? $header['text_domain'] : '';
+
 	// Text domain path; ie, /languages
 	$data['domain_path']     = !empty($header['domain_path'])   ? $header['domain_path'] : '';
+
 	// Minimum PHP requirement; ie, 5.6, or 7, or 7.2, etc
 	$data['requires_php']    = !empty($header['requires_php'])  ? $header['requires_php'] : '';
+
 	// Minimum ClassicPress requirement; ie, 1.1.1
 	$data['requires']        = !empty($header['requires'])      ? $header['requires'] : '';
+
 	// Maximum ClassicPress compatibility; ie, 1.1.1
 	$data['tested']          = !empty($header['tested'])        ? $header['tested'] : '';
+
 	// Author URL string.
 	$data['author']          = '';
 	if (!empty($header['author_uri']) && !empty($header['author'])) {
@@ -449,44 +629,69 @@ function parse_plugin_data($identifier, $endpoint, $request, $content) {
 	}
 	// Author URL.
 	$data['author_uri']      = !empty($header['author_uri'])    ? $header['author_uri'] : '';
-	// Plugin URL.
-	$data['plugin_uri']      = !empty($header['plugin_uri'])    ? $header['plugin_uri'] : '';
+
+	// Plugin/theme URI.
+	if ($component === 'plugin') {
+		$data['plugin_uri']      = !empty($header['plugin_uri'])    ? $header['plugin_uri'] : '';
+	} else if ($component === 'theme') {
+		$data['theme_uri']       = !empty($header['theme_uri'])     ? $header['theme_uri'] : '';
+	}
+
 	// Download link; ie, https://somesite.com/some-file.zip
 	$data['download_link']   = !empty($header['download_link']) ? $header['download_link'] : '';
+	if ($component === 'theme') {
+		$data['url']             = $data['download_link'];
+	}
+
 	// Donation link; ie, https://pay.me/?now-would-be-nice
 	$data['donate_link']     = !empty($header['donate_link'])   ? $header['donate_link'] : '';
+
 	// License; ie, GPL v2
 	$data['license']         = !empty($header['license'])       ? $header['license'] : '';
+
 	// License URL; ie, https://somesite.com/licence.html
 	$data['license_uri']     = !empty($header['license_uri'])   ? $header['license_uri'] : '';
-	// Plugin homepage.
-	$data['homepage']        = !empty($header['plugin_uri'])    ? $header['plugin_uri'] : '';
+
+	// Plugin/theme home page.
+	if ($component === 'plugin') {
+		$data['homepage']        = !empty($header['plugin_uri'])    ? $header['plugin_uri'] : '';
+	} else if ($component === 'theme') {
+		$data['homepage']        = !empty($header['theme_uri'])     ? $header['theme_uri'] : '';
+	}
+
 	// Plugin last update date; ie, 2019-12-16 15:02:08
 	$data['last_updated']    = $endpoint[0]->post_modified;
+
 	// Plugin release date; ie, 2019-12-16 15:02:08
 	$data['added']           = $endpoint[0]->post_date;
+
 	// Active installs; filterable since active installs aren't counted.
 	$data['active_installs'] = apply_filters(PLUGIN_PREFIX.'_'.$identifier.'_active_installs', 0, $identifier);
 	if (empty($data['active_installs'])) {
 		unset($data['active_installs']);
 	}
-	// Array of URLs to the banner images for the plugin.
-	$data['banners']         = get_plugin_banners($request);
-	// Array of URLs to the icons images for the plugin.
-	$data['icons']           = get_plugin_icons($endpoint, $identifier);
+
+	// Plugin banners and icons.
+	if ($component === 'plugin') {
+		// Array of URLs to the banner images for the plugin.
+		$data['banners']         = get_plugin_banners($request);
+		// Array of URLs to the icons images for the plugin.
+		$data['icons']           = get_plugin_icons($endpoint, $identifier);
+	}
+
 	// Compatibility map; is this needed?
 	$data['compatibility']   = [];
 	if (!empty($header['requires'])) {
 		$data['compatibility']   = [
-			$header['requires'] => true
+				$header['requires'] => true
 		];
 	}
 
 	// Before capturing sections to the data array; add star rating data.
 	if (!empty($sections['reviews'])) {
-		$data['ratings']     = get_plugin_ratings($reviews_raw);
+		$data['ratings']     = get_ratings($reviews_raw);
 		$data['num_ratings'] = array_sum($data['ratings']);
-		$data['rating']      = get_plugin_ratings_score($data['ratings'], $data['num_ratings']);
+		$data['rating']      = get_score($data['ratings'], $data['num_ratings']);
 	}
 
 	// Place sections at the end; purely for a more visually aesthetic endpoint.
@@ -500,6 +705,31 @@ function parse_plugin_data($identifier, $endpoint, $request, $content) {
 	// Finally!
 	return $data;
 
+}
+
+/**
+ * Parse readme-style data into usable data.
+ *
+ * The decision to describe plugin properties through a readme-style format came
+ * from several considerations. Speed – many plugin developers already have such
+ * files available and can then copy and paste more easily. Bloat – consider how
+ * many inputs it would take to flesh out an interface that could accept all the
+ * required data.
+ *
+ * @author John Alarcon
+ *
+ * @since 1.0.0
+ *
+ * @deprecated 2.0.0 Use parse_component_data() function instead.
+ *
+ * @param string $identifier
+ * @param object $nedpoint_post
+ * @param array $request
+ * @param string $content
+ * @return array
+ */
+function parse_plugin_data($identifier, $endpoint, $request, $content) {
+	return parse_component_data($identifier, $endpoint, $request, $content);
 }
 
 /**
@@ -541,7 +771,7 @@ function prevent_unauthorized_pending_updates($request, $endpoint, $data) {
 	}
 
 	// Alter data to provide info only without update.
-	$data['version'] = $request['version'];
+	$data['version'] = !empty($request['version']) ? $request['version'] : '';
 	$data['requires_php'] = '';
 	$data['requires'] = '';
 	$data['tested'] = '';
@@ -695,12 +925,12 @@ function strip_tags_deep($value) {
  *
  * @author John Alarcon
  *
- * @since 1.0.0
+ * @since 2.0.0
  *
  * @param string $opinions
  * @return array
  */
-function get_plugin_ratings($opinions) {
+function get_ratings($opinions) {
 
 	// Default data to start with.
 	$ratings = [ 5=>0, 4=>0, 3=>0, 2=>0, 1=>0 ];
@@ -720,19 +950,40 @@ function get_plugin_ratings($opinions) {
 }
 
 /**
+ * Get plugin ratings.
+ *
+ * This function will eventually gather the actual "stars" received with a given
+ * rating and translate those values into an array. Since this functionality has
+ * not been implemented yet, all the ratings are being presumed 5-stars and math
+ * is done base on that to come up with plugins' score (out of 100).
+ *
+ * @author John Alarcon
+ *
+ * @since 1.0.0
+ *
+ * @deprecated 2.0.0 Use get_ratings() function instead.
+ *
+ * @param string $opinions
+ * @return array
+ */
+function get_plugin_ratings($opinions) {
+	return get_ratings($opinions);
+}
+
+/**
  * Get plugin score.
  *
  * The function calculates the plugin's user-rated score, up to 100.
  *
  * @author John Alarcon
  *
- * @since 1.0.0
+ * @since 2.0.0
  *
  * @param array $ratings
  * @param integer $total
  * @return integer
  */
-function get_plugin_ratings_score($ratings, $total) {
+function get_score($ratings, $total) {
 
 	// Missing arguments? Bail.
 	if (empty($ratings) || empty($total)) {
@@ -751,6 +1002,25 @@ function get_plugin_ratings_score($ratings, $total) {
 	// Retuen the score.
 	return $score;
 
+}
+
+/**
+ * Get plugin score.
+ *
+ * The function calculates the plugin's user-rated score, up to 100.
+ *
+ * @author John Alarcon
+ *
+ * @since 1.0.0
+ *
+ * @deprecated 2.0.0 Use get_score() function instead.
+ *
+ * @param array $ratings
+ * @param integer $total
+ * @return integer
+ */
+function get_plugin_ratings_score($ratings, $total) {
+	return get_score($ratings, $total);
 }
 
 /**
@@ -787,7 +1057,7 @@ function get_header_data(&$lines) {
 		$header_properties = ['name:', 'description:', 'version:',
 			'text domain:', 'domain path:', 'requires php:', 'requires:',
 			'tested:', 'author:', 'author uri:', 'plugin uri:', 'download link:',
-			'donate link:', 'license:', 'license uri:',
+			'theme uri:', 'donate link:', 'license:', 'license uri:', 'tags:',
 		];
 		// Iterate over $header_properties to check if they are in $line.
 		foreach ($header_properties as $str) {
@@ -877,6 +1147,7 @@ function get_sections_data(&$lines) {
 		}
 	}
 
+
 	// Return the sections data.
 	return $sections;
 
@@ -930,6 +1201,9 @@ function markup_testing_notice($targets, $identifier, $header) {
 			'<strong>',
 			'</strong>');
 
+	// Initialization.
+	$note1 = $note2 = '';
+	
 	// Texts for nudging users toward notifying you about any issues.
 	if (!empty($mail_url) && !empty($http_url)) {
 		$note2 = sprintf(
@@ -975,13 +1249,13 @@ function markup_testing_notice($targets, $identifier, $header) {
  * @param string $changelog A string of markdown.
  * @return string Markup for the Changelog tab in the modal windows.
  */
-function markup_plugin_generic_section($content) {
+function markup_generic_section($content) {
 
 	// Initialization.
 	$markup = '';
 
 	// Now Parsedown gets a turn; and returns the final markup.
-	$markup .= Parsedown::instance()->setBreaksEnabled(true)->text(implode("\r\n", $content));
+	$markup .= Parsedown::instance()->text(implode("\r\n", $content));
 
 	// Return the markup.
 	return $markup;
@@ -1001,7 +1275,7 @@ function markup_plugin_generic_section($content) {
  * @param string $description The post content.
  * @return string Markup for the Description tab in the modal windows.
  */
-function markup_plugin_description($description) {
+function markup_description($description) {
 
 	// Initialization.
 	$markup = '';
@@ -1027,7 +1301,7 @@ function markup_plugin_description($description) {
  * @param string $reviews A string of markdown.
  * @return string Markup for the Reviews tab in the modal windows.
  */
-function markup_plugin_reviews($reviews) {
+function markup_reviews($reviews) {
 
 	// No data? Bail.
 	if (empty($reviews) || !is_array($reviews)) {
@@ -1068,7 +1342,7 @@ function markup_plugin_reviews($reviews) {
  * @param array $raw_captions
  * @return string Markup for the Screenshots tab in the modal windows.
  */
-function markup_plugin_screenshots($urls, $raw_captions) {
+function markup_screenshots($urls, $raw_captions) {
 
 	// Initialization.
 	$screenshots = '';
@@ -1120,7 +1394,7 @@ function markup_plugin_screenshots($urls, $raw_captions) {
  * @since 1.0.0
  *
  */
-function markup_plugin_upgrade_notice($notice, $text_only=false) {
+function markup_upgrade_notice($notice, $text_only=false) {
 
 	// If notice is a string, return it.
 	if (is_string($notice)) {
@@ -1139,9 +1413,205 @@ function markup_plugin_upgrade_notice($notice, $text_only=false) {
 	}
 
 	// Convert $notice array to markup.
-	$notice = markup_plugin_generic_section($notice);
+	$notice = markup_generic_section($notice);
 
 	// Return markup.
 	return $notice;
+
+}
+
+/**
+ * Markup for inline cheat sheet.
+ *
+ * This markup is displayed under the primary metabox inputs and provides a fast
+ * way to recall what values are expected in the endpoint header section.
+ *
+ * @author John Alarcon
+ *
+ * @since 2.0.0
+ *
+ * @param string $component Will be either 'plugin' or 'theme'.
+ *
+ * @return string Markup of the cheat sheet.
+ */
+function markup_header_data_legend($component) {
+
+	// Whitelist the component type.
+	if ($component !== 'plugin') {
+		$component = 'theme';
+	}
+
+	// Container.
+	$markup = '<div id="'.PLUGIN_SLUG.'-cheat-sheet">';
+
+	// Heading.
+	$markup .= '<h3>'.esc_html__('Header Properties Cheat Sheet', 'codepotent-update-manager').'</h3>';
+
+	// Informational note.
+	$markup .= '<blockquote>';
+	$markup .= '<p>';
+	$markup .= sprintf(
+			esc_html__('In the %s editor above, the lines between %s and %s are known as the &quot;header properties&quot;.', 'codepotent-update-manager'),
+			'<strong>'.ucfirst($component).' Details</strong>',
+			'<code>=== '.ucfirst($component).' Name ===</code>',
+			'<code>== Description ==</code>');
+	$markup .= ' ';
+	$markup .= esc_html__('The following header properties can be used.', 'codepotent-update-manager');
+	$markup .= ' ';
+	$markup .= sprintf(
+			esc_html__('Note that each property name must be followed by a colon %1$s:%2$s and the value for the property must be on the same line, for example, %1$sVersion: 1.2.3%2$s or %1$sAuthor: Code Potent%2$s.', 'codepotent-update-manager'),
+			'<code>',
+			'</code>');
+	$markup .= '</p>';
+	$markup .= '</blockquote>';
+
+	// Description.
+	$markup .= '<p>';
+	$markup .= '<code class="'.PLUGIN_SLUG.'-property-name">'.esc_html__('Description', 'codepotent-update-manager').'</code> ';
+	$markup .= '<em class="optional">'.esc_html__('Optional', 'codepotent-update-manager').'</em><br>';
+	$markup .= sprintf(
+			esc_html__('A succinct description or overview of the %1$s. This text can span more than a single line in the editor, but, must not contain any line breaks or carriage returns. Used in %1$s update admin rows.', 'codepotent-update-manager'),
+			$component);
+	$markup .= '</p>';
+
+	// Version.
+	$markup .= '<p>';
+	$markup .= '<code class="'.PLUGIN_SLUG.'-property-name">'.esc_html__('Version', 'codepotent-update-manager').'</code> ';
+	$markup .= '<em class="required">'.esc_html__('Required', 'codepotent-update-manager').'</em><br>';
+	$markup .= sprintf(
+			esc_html__('The latest version number for the %s. Semantic versions are supported, for example, %s.', 'codepotent-update-manager'),
+			$component,
+			'<code>2.3.10</code>');
+	$markup .= '</p>';
+
+	// Text domain.
+	$markup .= '<p>';
+	$markup .= '<code class="'.PLUGIN_SLUG.'-property-name">'.esc_html__('Text Domain', 'codepotent-update-manager').'</code> ';
+	$markup .= '<em class="optional">'.esc_html__('Optional', 'codepotent-update-manager').'</em><br>';
+	$markup .= sprintf(
+			esc_html__('The text domain used in your translated texts; often simply the %s own directory name, for example, %s.', 'codepotent-update-manager'),
+			$component.'&#39;s',
+			'<code>my-'.$component.'-name</code>');
+	$markup .= '</p>';
+
+	// Domain path.
+	$markup .= '<p>';
+	$markup .= '<code class="'.PLUGIN_SLUG.'-property-name">'.esc_html__('Domain Path', 'codepotent-update-manager').'</code> ';
+	$markup .= '<em class="optional">'.esc_html__('Optional', 'codepotent-update-manager').'</em><br>';
+	$markup .= sprintf(
+			esc_html__('The path to the directory that holds your translation files, relative to the text domain directory, often %s.', 'codepotent-update-manager'),
+			'<code>/languages</code>');
+	$markup .= '</p>';
+
+	// Requires PHP.
+	$markup .= '<p>';
+	$markup .= '<code class="'.PLUGIN_SLUG.'-property-name">'.esc_html__('Requires PHP', 'codepotent-update-manager').'</code> ';
+	$markup .= '<em class="optional">'.esc_html__('Optional', 'codepotent-update-manager').'</em><br>';
+	$markup .= sprintf(
+			esc_html__('The minimum version of PHP required by the %s, for example, %s, %s, or %s.', 'codepotent-update-manager'),
+			$component,
+			'<code>5.6.40</code>',
+			'<code>7</code>',
+			'<code>7.2</code>'
+			);
+	$markup .= '</p>';
+
+	// Minimum ClassicPress requirement.
+	$markup .= '<p>';
+	$markup .= '<code class="'.PLUGIN_SLUG.'-property-name">'.esc_html__('Requires', 'codepotent-update-manager').'</code> ';
+	$markup .= '<em class="required">'.esc_html__('Required', 'codepotent-update-manager').'</em><br>';
+	$markup .= sprintf(
+			esc_html__('The minimum version of ClassicPress required by the %s, for example, %s or %s.', 'codepotent-update-manager'),
+			$component,
+			'<code>1.0.0</code>',
+			'<code>1.1.2</code>'
+			);
+	$markup .= '</p>';
+
+	// Maximum ClassicPress requirement.
+	$markup .= '<p>';
+	$markup .= '<code class="'.PLUGIN_SLUG.'-property-name">'.esc_html__('Tested', 'codepotent-update-manager').'</code> ';
+	$markup .= '<em class="optional">'.esc_html__('Optional', 'codepotent-update-manager').'</em><br>';
+	$markup .= sprintf(
+			esc_html__('The maximum version of ClassicPress the %s has been tested with. You can set a specific ClassicPress version number here to indicate compatibility up to a certain version, or, you can set it to %s to indicate 100&#37; compatible.', 'codepotent-update-manager'),
+			$component,
+			'<code>4.9.99</code>');
+	$markup .= '</p>';
+
+	// Author name.
+	$markup .= '<p>';
+	$markup .= '<code class="'.PLUGIN_SLUG.'-property-name">'.esc_html__('Author', 'codepotent-update-manager').'</code> ';
+	$markup .= '<em class="optional">'.esc_html__('Optional', 'codepotent-update-manager').'</em><br>';
+	$markup .= sprintf(
+			esc_html__('The author, developer, or agency name in plain text, for example %s.', 'codepotent-update-manager'),
+			'<code>Code Potent</code>');
+	$markup .= '</p>';
+
+	// Author URI.
+	$markup .= '<p>';
+	$markup .= '<code class="'.PLUGIN_SLUG.'-property-name">'.esc_html__('Author URI', 'codepotent-update-manager').'</code> ';
+	$markup .= '<em class="optional">'.esc_html__('Optional', 'codepotent-update-manager').'</em><br>';
+	$markup .= sprintf(
+			esc_html__('A link to the author, developer, or agency website, for example, %s.', 'codepotent-update-manager'),
+			'<code>https://www.site.com</code>');
+	$markup .= '</p>';
+
+	// Component URI.
+	$markup .= '<p>';
+	if ($component === 'plugin') {
+		$markup .= '<code class="'.PLUGIN_SLUG.'-property-name">'.esc_html__('Plugin URI', 'codepotent-update-manager').'</code> ';
+	} else {
+		$markup .= '<code class="'.PLUGIN_SLUG.'-property-name">'.esc_html__('Theme URI', 'codepotent-update-manager').'</code> ';
+	}
+	$markup .= '<em class="optional">'.esc_html__('Optional', 'codepotent-update-manager').'</em><br>';
+	$markup .= sprintf(
+			esc_html__('A link to the %s own page on the web, for example, %s.', 'codepotent-update-manager'),
+			$component.'&#39;s',
+			'<code>https://site.com/my-'.$component.'/</code>');
+	$markup .= '</p>';
+
+	// Download link.
+	$markup .= '<p>';
+	$markup .= '<code class="'.PLUGIN_SLUG.'-property-name">'.esc_html__('Download link', 'codepotent-update-manager').'</code> ';
+	$markup .= '<em class="required">'.esc_html__('Required', 'codepotent-update-manager').'</em><br>';
+	$markup .= sprintf(
+			esc_html__('A link to the zip file with the updated version of the %s, for example, %s.', 'codepotent-update-manager'),
+			$component,
+			'<code>https://site.com/the-updated-file.zip</code>');
+	$markup .= '</p>';
+
+	// Donate link.
+	$markup .= '<p>';
+	$markup .= '<code class="'.PLUGIN_SLUG.'-property-name">'.esc_html__('Donate link', 'codepotent-update-manager').'</code> ';
+	$markup .= '<em class="optional">'.esc_html__('Optional', 'codepotent-update-manager').'</em><br>';
+	$markup .= esc_html__('A link to solicit donations for the effort. This link might be to a Patreon or PayPal account, or even just to a page on your own site.', 'codepotent-update-manager');
+	$markup .= '</p>';
+
+	// License type.
+	$markup .= '<p>';
+	$markup .= '<code class="'.PLUGIN_SLUG.'-property-name">'.esc_html__('License', 'codepotent-update-manager').'</code> ';
+	$markup .= '<em class="optional">'.esc_html__('Optional', 'codepotent-update-manager').'</em><br>';
+	$markup .= sprintf(
+			esc_html__('The license type under which the %s is released, for example, %s or %s.', 'codepotent-update-manager'),
+			$component,
+			'<code>GPLv2</code>',
+			'<code>GPLv3</code>'
+			);
+	$markup .= '</p>';
+
+	// License URI.
+	$markup .= '<p>';
+	$markup .= '<code class="'.PLUGIN_SLUG.'-property-name">'.esc_html__('License URI', 'codepotent-update-manager').'</code> ';
+	$markup .= '<em class="optional">'.esc_html__('Optional', 'codepotent-update-manager').'</em><br>';
+	$markup .= sprintf(
+			esc_html__('A link to the license applicable to the %s.', 'codepotent-update-manager'),
+			$component);
+	$markup .= '</p>';
+
+	// Container.
+	$markup .= '</div>';
+
+	// Return the markup string.
+	return $markup;
 
 }

@@ -1,6 +1,6 @@
 /**
  * -----------------------------------------------------------------------------
- * Purpose: CSS for the plugin's post-edit screen.
+ * Purpose: CSS for the plugin's post-edit screen for plugin endpoints.
  * Package: CodePotent\UpdateManager
  * -----------------------------------------------------------------------------
  * This is free software released under the terms of the General Public License,
@@ -8,7 +8,7 @@
  * implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. Full
  * text of the license is available at https://www.gnu.org/licenses/gpl-2.0.txt.
  * -----------------------------------------------------------------------------
- * Copyright © 2019 CodePotent
+ * Copyright 2020, Code Potent
  * -----------------------------------------------------------------------------
  *           ____          _      ____       _             _
  *          / ___|___   __| | ___|  _ \ ___ | |_ ___ _ __ | |_
@@ -30,4 +30,75 @@
 #codepotent-update-manager-plugin-data .form-table td {
 	vertical-align:top;
 	padding-top:25px;
+	}
+#codepotent-update-manager-cheat-sheet {
+	display:none;
+	}
+#codepotent-update-manager-cheat-sheet p {
+	padding-top:5px;
+	}
+#codepotent-update-manager-cheat-sheet p {
+	margin:0 0 15px;
+	padding:0;
+	}
+#codepotent-update-manager-cheat-sheet blockquote {
+	margin:25px 0;
+	background:#fafafa;
+	padding:10px;
+	border-left: 3px solid #337dc1;
+	}
+#codepotent-update-manager-cheat-sheet blockquote p {
+	margin:0;
+	}
+#codepotent-update-manager-cheat-sheet p em.required {
+	color:#f00;
+	}
+#codepotent-update-manager-cheat-sheet p em.optional {
+	color:#72777c;
+	}
+#codepotent-update-manager-cheat-sheet .codepotent-update-manager-property-name {
+	font-weight:bold;
+	}
+/* Version column */
+th#version.manage-column.column-version,
+td.version.column-version {
+	width:50px;
+	text-align:center;
+	}
+	
+/* Download column */
+th#download.manage-column.column-download,
+th.manage-column.column-download,
+td.download.column-download {
+	padding:5px 10px 0 0;
+	width:20px;
+	}
+td.download.column-download {
+	padding:10px 10px 0 0;
+	width:20px;
+	}
+	
+/* Title column */
+th#title.manage-column.column-title,
+td.title.column-title {
+	width:250px;
+	}
+	
+/* Test URLs & notifications column */
+th#test_urls.manage-column.column-test_urls,
+td.test_urls.column-test_urls,
+th#notifications.manage-column.column-notifications,
+td.notifications.column-notifications {
+	width:200px;
+	}
+td.notifications.column-notifications .dashicons {
+	font-size:16px;
+	line-height:24px;
+	color:#ccc;
+	}
+	
+/* Updated column */
+th#modified.manage-column.column-modified,
+td.modified.column-modified {
+	width:100px;
 	}
