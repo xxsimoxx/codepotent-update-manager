@@ -4,7 +4,7 @@
  * -----------------------------------------------------------------------------
  * Plugin Name: Update Manager
  * Description: Painlessly push updates to your ClassicPress plugin users! Serve updates from GitHub, your own site, or somewhere in the cloud. 100% integrated with the ClassicPress update process; slim and performant.
- * Version: 2.0.0
+ * Version: 2.1.0
  * Author: Code Potent
  * Author URI: https://codepotent.com
  * Plugin URI: https://codepotent.com/classicpress/plugins
@@ -16,7 +16,7 @@
  * implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. Full
  * text of the license is available at https://www.gnu.org/licenses/gpl-2.0.txt.
  * -----------------------------------------------------------------------------
- * Copyright 2020, Code Potent
+ * Copyright 2021, Code Potent
  * -----------------------------------------------------------------------------
  *           ____          _      ____       _             _
  *          / ___|___   __| | ___|  _ \ ___ | |_ ___ _ __ | |_
@@ -114,11 +114,9 @@ class UpdateManager {
 		// Setup the theme endpoint post types.
 		new ThemeEndpoint;
 
-		// Setup the transient inspector, if added. For development.
-		if (class_exists(__NAMESPACE__.'\TransientInspector')) {
-			new TransientInspector;
-		}
-
+		// Setup the transient inspector.
+		new TransientInspector;
+		
 		// Run the update client.
 		UpdateClient::get_instance();
 

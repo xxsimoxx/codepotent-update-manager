@@ -4,7 +4,6 @@
  * -----------------------------------------------------------------------------
  * Purpose: Public functions for the Update Manager plugin.
  * Package: CodePotent\UpdateManager
- * Version: 1.0.0
  * Author: Code Potent
  * Author URI: https://codepotent.com
  * -----------------------------------------------------------------------------
@@ -13,7 +12,7 @@
  * implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. Full
  * text of the license is available at https://www.gnu.org/licenses/gpl-2.0.txt.
  * -----------------------------------------------------------------------------
- * Copyright 2019 - Code Potent
+ * Copyright 2021 - Code Potent
  * -----------------------------------------------------------------------------
  *           ____          _      ____       _             _
  *          / ___|___   __| | ___|  _ \ ___ | |_ ___ _ __ | |_
@@ -697,9 +696,12 @@ function parse_component_data($identifier, $endpoint, $request, $content) {
 	// Place sections at the end; purely for a more visually aesthetic endpoint.
 	$data['sections']        = $sections;
 
-	// Assignments complete! One final thing left...
+	// Assignments complete!
 
-	// Remove certain fields if URL not whitelisted to receive Pending updates.
+	// Filter the assembled data, if needed.
+	$data = apply_filters(PLUGIN_PREFIX.'_filter_parsed_component_data', $data, $request);
+
+	// Remove certain fields if URL not whitelisted for (Pending) updates.
 	$data = prevent_unauthorized_pending_updates($request, $endpoint, $data);
 
 	// Finally!
@@ -1045,7 +1047,7 @@ function get_header_data(&$lines) {
 	foreach ($lines as $k=>$line) {
 		// Trim up the right side.
 		$line = rtrim($line);
-		// Assign trimmed value back to orginal array.
+		// Assign trimmed value back to original array.
 		$lines[$k] = $line;
 		// Grab the plugin name: === Plugin Name ===
 		if (strpos(strtolower($line), '===') === 0) {
@@ -1195,15 +1197,15 @@ function markup_testing_notice($targets, $identifier, $header) {
 		$http_url = array_shift($targets['url']);
 	}
 
+	// Initilazation.
+	$note1 = $note2 = '';
+
 	// Cautionary note regarding this being a testing update.
 	$note1 = sprintf(
 			esc_html__('%sCaution%s: This update is currently undergoing testing &#8211; it is not yet intended for production.', 'codepotent-update-manager'),
 			'<strong>',
 			'</strong>');
 
-	// Initialization.
-	$note1 = $note2 = '';
-	
 	// Texts for nudging users toward notifying you about any issues.
 	if (!empty($mail_url) && !empty($http_url)) {
 		$note2 = sprintf(
