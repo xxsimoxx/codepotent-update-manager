@@ -1,9 +1,5 @@
 > Painlessly push updates to your ClassicPress plugin and theme users! Serve updates from GitHub, your own site, or somewhere in the cloud. 100% integrated with the ClassicPress update process; super-slim and performant. Incredibly easy!
 
-### Always use the **[latest release](https://github.com/codepotent/update-manager/releases/latest)** on production sites! 
-
----
-
 With the Update Manager plugin for ClassicPress, developers can push plugin and theme updates out to their end users with ease! This isn't a fork of a WordPress plugin – this is a brand new plugin built specifically for ClassicPress!
 
 ## Remote Updates made Easy
@@ -85,11 +81,11 @@ With the plugin in _Pending Review_ status, the update will be made available on
 1. Click to **Update** the endpoint.
 
 This field accepts multiple email addresses and a _single_ URL, separated by commas. The order is not important. If you supply email addresses, a link will be crafted that prepopulates an email with some basic information. If you supply a URL, it will be used to point the user toward a feedback form, GitHub repo, or wherever. If you supply email(s) _and_ URL, both options will be offered. These links will appear in the test notice that appears in the modal windows.
- 
+
 ### Pushing Alpha, Beta, and Release Candidate Versions
 Semantic versioning is used throughout. You can push updates for alpha, beta, and release candidate versions without any trouble. Let's say you wanted to run through the basic steps with a version 1.0.0 plugin. You might release a plugin at 1.0.0-alpha. Next, you could bump the version to 1.0.0-beta... and then 1.0.0-rc1, and then 1.0.0-rc2, and then 1.0.0. Each version in that chain succeeds the previous. Here's the upgrade path, a bit more visually.
 
-> **1.0.0-alpha**&nbsp;  < &nbsp; **1.0.0-beta**&nbsp;  < &nbsp; **1.0.0-rc1**&nbsp;  < &nbsp; **1.0.0-rc2**&nbsp;  < &nbsp; **1.0.0** 
+> **1.0.0-alpha**&nbsp;  < &nbsp; **1.0.0-beta**&nbsp;  < &nbsp; **1.0.0-rc1**&nbsp;  < &nbsp; **1.0.0-rc2**&nbsp;  < &nbsp; **1.0.0**
 
 **Supplemental Note**: You can also push sequential updates for a given pre-release (alpha, beta, or RC version). For example, _1.0.0-alpha1_ is less than _1.0.0-alpha2_ which is less than _1.0.0-alpha3_, which is less than...well, you get the idea.
 
@@ -177,11 +173,11 @@ With the theme in _Pending Review_ status, the update will be made available onl
 1. Click to **Update** the endpoint.
 
 This field accepts multiple email addresses and a _single_ URL, separated by commas. The order is not important. If you supply email addresses, a link will be crafted that prepopulates an email with some basic information. If you supply a URL, it will be used to point the user toward a feedback form, GitHub repo, or wherever. If you supply email(s) _and_ URL, both options will be offered. These links will appear in the test notice that appears in the modal windows.
- 
+
 ### Pushing Alpha, Beta, and Release Candidate Versions
 Semantic versioning is used throughout. You can push updates for alpha, beta, and release candidate versions without any trouble. Let's say you wanted to run through the basic steps with a version 1.0.0 theme. You might release a theme at 1.0.0-alpha. Next, you could bump the version to 1.0.0-beta... and then 1.0.0-rc1, and then 1.0.0-rc2, and then 1.0.0. Each version in that chain succeeds the previous. Here's the upgrade path, a bit more visually.
 
-> **1.0.0-alpha**&nbsp;  < &nbsp; **1.0.0-beta**&nbsp;  < &nbsp; **1.0.0-rc1**&nbsp;  < &nbsp; **1.0.0-rc2**&nbsp;  < &nbsp; **1.0.0** 
+> **1.0.0-alpha**&nbsp;  < &nbsp; **1.0.0-beta**&nbsp;  < &nbsp; **1.0.0-rc1**&nbsp;  < &nbsp; **1.0.0-rc2**&nbsp;  < &nbsp; **1.0.0**
 
 **Supplemental Note**: You can also push sequential updates for a given pre-release (alpha, beta, or RC version). For example, _1.0.0-alpha1_ is less than _1.0.0-alpha2_ which is less than _1.0.0-alpha3_, which is less than...well, you get the idea.
 
@@ -208,7 +204,7 @@ Clicking the text link to delete **Both** transients will delete the data stored
 
 ---
 
-### Processing Incoming Requests 
+### Processing Incoming Requests
 To work with the data received from incoming requests, the following filter can be added to a utility plugin. This might be used for tracking installations or adding/removing values to/from the request _before_ querying the endpoint for data. This filter accepts 1 argument, `$request`. Replace `{component-type}` with either `plugin` or `theme`, depending on the type of request you are trying to filter.
 
 <pre>function some_function_name($request) {
@@ -222,7 +218,7 @@ add_filter('codepotent_update_manager_filter_{component-type}_request', 'some_fu
 </pre>
 
 --- 
-### Processing Outgoing Responses 
+### Processing Outgoing Responses
 When a request is received by the Update Manager plugin, the relevant plugin (or theme) data is assembled and passed back as a response to the calling site. This filter allows final processing of that data before it is returned to the calling site. This filter accepts 2 arguments, `data` and `request` and returns the possible-amended `data`.
 
 <pre>function some_function_name($data, $request) {
@@ -236,7 +232,7 @@ add_filter('codepotent_update_manager_filter_parsed_component_data', 'some_funct
 </pre>
 
 --- 
-### Active Installations 
+### Active Installations
 The Update Manager plugin does not track or know how many active installations there are of any given plugin. If you are otherwise tracking those numbers, you can filter them into the remote modal windows by adding the following filter to a utility plugin. The filter accepts only uses the first of the two arguments, `$number`. Replace `{identifier}` with your plugin identifier, ie, `my-plugin-dir/my-plugin-file.php`.
 
 <pre>function some_function_name($number, $identifier) {
@@ -246,7 +242,7 @@ add_filter('codepotent_update_manager_{identifier}_active_installs', 'some_funct
 </pre>
 
 --- 
-### Admin Menu 
+### Admin Menu
 Position To change the admin menu item's position, this filter can be added to a utility plugin. See also the following table of menu position values.
 
 <pre>function some_function_name($position) {
@@ -278,7 +274,7 @@ add_filter('codepotent_update_manager_image_url', 'my_custom_image_url');
 </pre>
 
 --- 
-### Filter Notification 
+### Filter Notification
 Email Properties If you are using the notification features for endpoints to allow your testers to contact you with feedback, you can filter the default subject and body of the email message with the following filters.
 
 <pre>function some_function_name($subject) {
@@ -296,7 +292,7 @@ add_filter('codepotent_update_manager_notification_email_body', 'some_function_n
 
 --- 
 
-### Footer Credit 
+### Footer Credit
 For extension authors, this filter allows for a credit link to be appended to the Code Potent footer text. This filter accepts a single argument, `$text`, which is an empty string, by default. Note that all HTML is stripped, except for the <a> tag. The URLs can be as long as needed, but, the visible text and links may be truncated at 50 characters. This filter is for adding a credit link, not for marketing text and upsells; misusing this feature will cause it to be removed.
 
 <pre>function some_function_name($text) {
@@ -304,9 +300,3 @@ For extension authors, this filter allows for a credit link to be appended to th
 }
 add_filter('codepotent_update_manager_extension_footer_{your-slug-here}', 'some_function_name');
 </pre>
-
----
-
----
-
-[![](https://static.codepotent.com/images/logotype/code-potent-logotype-wordmark-252x36.png)](https://codepotent.com/classicpress/plugins/)

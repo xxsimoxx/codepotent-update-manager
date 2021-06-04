@@ -4,7 +4,7 @@
  * -----------------------------------------------------------------------------
  * Purpose: Public functions for the Update Manager plugin.
  * Package: CodePotent\UpdateManager
- * Author: Code Potent
+ * Author: John Alarcon
  * Author URI: https://codepotent.com
  * -----------------------------------------------------------------------------
  * This is free software released under the terms of the General Public License,
@@ -13,13 +13,6 @@
  * text of the license is available at https://www.gnu.org/licenses/gpl-2.0.txt.
  * -----------------------------------------------------------------------------
  * Copyright 2021 - Code Potent
- * -----------------------------------------------------------------------------
- *           ____          _      ____       _             _
- *          / ___|___   __| | ___|  _ \ ___ | |_ ___ _ __ | |_
- *         | |   / _ \ / _` |/ _ \ |_) / _ \| __/ _ \ '_ \| __|
- *         | |__| (_) | (_| |  __/  __/ (_) | ||  __/ | | | |_
- *          \____\___/ \__,_|\___|_|   \___/ \__\___|_| |_|\__|.com
- *
  * -----------------------------------------------------------------------------
  */
 
@@ -1461,7 +1454,7 @@ function markup_header_data_legend($component) {
 	$markup .= esc_html__('The following header properties can be used.', 'codepotent-update-manager');
 	$markup .= ' ';
 	$markup .= sprintf(
-			esc_html__('Note that each property name must be followed by a colon %1$s:%2$s and the value for the property must be on the same line, for example, %1$sVersion: 1.2.3%2$s or %1$sAuthor: Code Potent%2$s.', 'codepotent-update-manager'),
+			esc_html__('Note that each property name must be followed by a colon %1$s:%2$s and the value for the property must be on the same line, for example, %1$sVersion: 1.2.3%2$s or %1$sAuthor: John Alarcon%2$s.', 'codepotent-update-manager'),
 			'<code>',
 			'</code>');
 	$markup .= '</p>';

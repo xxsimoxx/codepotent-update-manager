@@ -8,14 +8,7 @@
  * implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. Full
  * text of the license is available at https://www.gnu.org/licenses/gpl-2.0.txt.
  * -----------------------------------------------------------------------------
- * Copyright 2021, Code Potent
- * -----------------------------------------------------------------------------
- *           ____          _      ____       _             _
- *          / ___|___   __| | ___|  _ \ ___ | |_ ___ _ __ | |_
- *         | |   / _ \ / _` |/ _ \ |_) / _ \| __/ _ \ '_ \| __|
- *         | |__| (_) | (_| |  __/  __/ (_) | ||  __/ | | | |_
- *          \____\___/ \__,_|\___|_|   \___/ \__\___|_| |_|\__|.com
- *
+ * Copyright 2021, John Alarcon (Code Potent)
  * -----------------------------------------------------------------------------
  */
 
@@ -237,7 +230,6 @@ jQuery(document).ready(function($) {
 			text += '== Other Notes ==\n\n';
 			text += '# About Code Potent\n\n';
 			text += '**Code Potent has blazed a trail in supporting ClassicPress!** Creating free [plugins](https://codepotent.com/classicpress/plugins), writing informative [articles](https://codepotent.com/classicpress/) and handy [tutorials](https://codepotent.com/tutorials/), making substantial [donations](https://www.classicpress.net/donate/), moderating and helping others on the [support forums](https://forums.classicpress.net/u/CodePotent/summary), serving on the [Management Committee](https://forums.classicpress.net/t/introducing-the-2020-classicpress-management-committee/1814?u=codepotent) – Code Potent is highly engaged with the ClassicPress project and community. When you need well-defined, high value solutions for your business, check out Code Potent!\n\n';
-			text += '[![Code Potent makes cool stuff!](https://static.codepotent.com/images/logotype/codepotent-logotype-words-optimized.svg)](https://codepotent.com/classicpress/plugins/)\n\n';
 			text += '== Changelog ==\n\n';
 			text += '# Changelog\n\n';
 			text += '### [Version 1.0.0](https://)\n';

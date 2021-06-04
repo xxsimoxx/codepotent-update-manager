@@ -3,7 +3,7 @@
 /**
  * -----------------------------------------------------------------------------
  * Purpose: Namespaced constants for ClassicPress plugins.
- * Author: Code Potent
+ * Author: John Alarcon
  * Author URI: https://codepotent.com
  * -----------------------------------------------------------------------------
  * This is free software released under the terms of the General Public License,
@@ -11,14 +11,7 @@
  * implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. Full
  * text of the license is available at https://www.gnu.org/licenses/gpl-2.0.txt.
  * -----------------------------------------------------------------------------
- * Copyright 2021, Code Potent
- * -----------------------------------------------------------------------------
- *           ____          _      ____       _             _
- *          / ___|___   __| | ___|  _ \ ___ | |_ ___ _ __ | |_
- *         | |   / _ \ / _` |/ _ \ |_) / _ \| __/ _ \ '_ \| __|
- *         | |__| (_) | (_| |  __/  __/ (_) | ||  __/ | | | |_
- *          \____\___/ \__,_|\___|_|   \___/ \__\___|_| |_|\__|.com
- *
+ * Copyright 2021, John Alarcon (Code Potent)
  * -----------------------------------------------------------------------------
  */
 
@@ -40,6 +33,8 @@ require_once(ABSPATH.'wp-admin/includes/plugin.php');
 
 // Ex: codepotent
 const VENDOR_PREFIX = 'codepotent';
+// Ex: Our company is cool!
+define(__NAMESPACE__.'\VENDOR_TAGLINE', esc_html__('', 'codepotent-update-manager'));
 // Ex: plugin-folder-name
 const PLUGIN_SHORT_SLUG = 'update-manager';
 // Ex: dashicons-whatever
@@ -140,38 +135,3 @@ const URL_IMAGES = URL_SELF.'/images';
 const URL_SCRIPTS = URL_SELF.'/scripts';
 // Ex: https://mysite.com/wp-content/plugins/my-plugin-name/styles
 const URL_STYLES = URL_SELF.'/styles';
-
-// -----------------------------------------------------------------------------
-// Branding
-// -----------------------------------------------------------------------------
-
-// Ex: Our company is cool!
-define(__NAMESPACE__.'\VENDOR_TAGLINE', esc_html__('Code Potent is a leading provider of trusted ClassicPress solutions.', 'codepotent-update-manager'));
-// Ex: https://codepotent.com
-const VENDOR_HOME_URL = 'https://codepotent.com';
-// Ex: https://www.codepotent.com/classicpress/plugins/plugin-name
-const VENDOR_PLUGIN_URL = 'https://codepotent.com/classicpress/plugins/'.PLUGIN_SHORT_SLUG;
-// Ex: https://www.codepotent.com/classicpress/plugins/plugin-name/#docs
-const VENDOR_DOCS_URL = VENDOR_PLUGIN_URL.'/#docs';
-// Ex: URL to ClassicPress' "Plugin Support" forum.
-const VENDOR_FORUM_URL = 'https://forums.classicpress.net/c/plugins/plugin-support/67';
-// Ex: https://www.codepotent.com/classicpress/plugins/plugin-name/#comments
-const VENDOR_REVIEWS_URL = VENDOR_PLUGIN_URL.'/#comments';
-// Ex: https://github.com/codepotent/plugin-name
-const VENDOR_REPO_URL = 'https://github.com/'.VENDOR_PREFIX.'/'.PLUGIN_SHORT_SLUG;
-// Ex: hexadecimal without hash
-const VENDOR_BLUE = '337dc1';
-// Ex: hexadecimal without hash
-const VENDOR_ORANGE = 'ff6635';
-// Ex: https://codepotent.com/wp-content/plugins/plugin-name/images/file.jpg
-const VENDOR_WORDMARK_URL = URL_IMAGES.'/code-potent-logotype-wordmark.svg';
-// Ex: html image
-const VENDOR_WORDMARK_IMG = '<img src="'.VENDOR_WORDMARK_URL.'" alt="'.VENDOR_TAGLINE.'" style="max-width:100%;">';
-// Ex: html linked image
-const VENDOR_WORDMARK_LINK = '<a href="'.VENDOR_HOME_URL.'" title="'.VENDOR_TAGLINE.'">'.VENDOR_WORDMARK_IMG.'</a>';
-// Ex: https://codepotent.com/wp-content/plugins/plugin-name/images/file.jpg
-const VENDOR_LETTERMARK_URL = URL_IMAGES.'/codepotent-logotype-lettermark.svg';
-// Ex: html image
-const VENDOR_LETTERMARK_IMG = '<img src="'.VENDOR_LETTERMARK_URL.'" alt="'.VENDOR_TAGLINE.'" style="height:1.2em;vertical-align:middle;">';
-// Ex: html linked image
-const VENDOR_LETTERMARK_LINK = '<a href="'.VENDOR_HOME_URL.'" title="'.VENDOR_TAGLINE.'">'.VENDOR_LETTERMARK_IMG.'</a>';

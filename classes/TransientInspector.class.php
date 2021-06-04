@@ -3,7 +3,7 @@
 /**
  * -----------------------------------------------------------------------------
  * Purpose: For inspecting and deleting update transients.
- * Author: Code Potent
+ * Author: John Alarcon
  * Author URI: https://codepotent.com
  * -----------------------------------------------------------------------------
  * This is free software released under the terms of the General Public License,
@@ -11,14 +11,7 @@
  * implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. Full
  * text of the license is available at https://www.gnu.org/licenses/gpl-2.0.txt.
  * -----------------------------------------------------------------------------
- * Copyright 2021, Code Potent
- * -----------------------------------------------------------------------------
- *		   ____		  _	  ____	   _			 _
- *		  / ___|___   __| | ___|  _ \ ___ | |_ ___ _ __ | |_
- *		 | |   / _ \ / _` |/ _ \ |_) / _ \| __/ _ \ '_ \| __|
- *		 | |__| (_) | (_| |  __/  __/ (_) | ||  __/ | | | |_
- *		  \____\___/ \__,_|\___|_|   \___/ \__\___|_| |_|\__|.com
- *
+ * Copyright 2021, John Alarcon (Code Potent)
  * -----------------------------------------------------------------------------
  */
 
