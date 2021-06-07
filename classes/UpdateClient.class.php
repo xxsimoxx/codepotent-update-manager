@@ -328,6 +328,11 @@ class UpdateClient {
 		// Get the component's information.
 		$info = $this->get_component_data($action, $list_components[$args->slug]);
 
+		// If the request failed, pass through an informative error message.
+		if (is_wp_error($info)) {
+			return $info;
+		}
+
 		// If the response has all the right properties, cast $info to object.
 		if (isset($info['name'], $info['slug'], $info['external'], $info['sections'])) {
 			$res = (object)$info;
@@ -652,8 +657,12 @@ class UpdateClient {
 		}
 
 		// Still an error? Hey, you tried. Bail.
-		if (is_wp_error($raw_response) || 200 != wp_remote_retrieve_response_code($raw_response)) {
-			return [];
+		if (is_wp_error($raw_response)) {
+			return new \WP_Error('update_manager_http_error', __('HTTP error.') . ' ' . $raw_response->get_error_message(), ['original_error' => $raw_response]);
+		}
+		$response_code = wp_remote_retrieve_response_code($raw_response);
+		if (200 != $response_code) {
+			return new \WP_Error('update_manager_http_error', __('HTTP error.') . ' ' . $response_code, compact('raw_response'));
 		}
 
 		// Get the response body; decode it as an array.
