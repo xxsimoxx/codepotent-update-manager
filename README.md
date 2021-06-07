@@ -30,7 +30,7 @@ To setup a plugin to work with the Update Manager, the following general steps a
 
 ### Install the Update Manager Plugin
 
-1. Install the Update Manager plugin according to the <a href="#install-manual" class="codepotent-plugin-directory-interlink">installation instructions</a>.
+1. Install the Update Manager plugin according to the <a href="#install-manual">installation instructions</a>.
 1. Navigate to `Dashboard > Update Manager > Plugins > Add New`  – this is where you will be managing your plugin updates.
 
 ### Adding the Update Client file to a Plugin
@@ -122,7 +122,7 @@ To setup a theme to work with the Update Manager, the following general steps ar
 
 ### Install the Update Manager Plugin
 
-1. Install the Update Manager plugin according to the <a href="#install-manual" class="codepotent-plugin-directory-interlink">installation instructions</a>.
+1. Install the Update Manager plugin according to the <a href="#install-manual">installation instructions</a>.
 1. Navigate to `Dashboard > Update Manager > Themes > Add New`  – this is where you will be managing your theme updates.
 
 ### Adding the Update Client file to a Theme
@@ -300,3 +300,14 @@ For extension authors, this filter allows for a credit link to be appended to th
 }
 add_filter('codepotent_update_manager_extension_footer_{your-slug-here}', 'some_function_name');
 </pre>
+
+--- 
+
+# Manual Installation <a name="install-manual"></a>
+
+- **Download** the zip file to your local computer
+- **Login** to your ClassicPress website.
+- **Navigate** to `Dashboard > Plugins > Add New > Upload Plugin`
+- **Upload** the zip file to your site
+- Click to **Install** the plugin
+- Click to **Activate** the plugin
