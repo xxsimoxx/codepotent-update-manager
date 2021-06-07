@@ -303,7 +303,7 @@ add_filter('codepotent_update_manager_extension_footer_{your-slug-here}', 'some_
 
 --- 
 
-# Manual Installation <a name="install-manual"></a>
+### Manual Installation <a name="install-manual"></a>
 
 - **Download** the zip file to your local computer
 - **Login** to your ClassicPress website.
