@@ -656,6 +656,11 @@ class UpdateClient {
 		// Get the response body; decode it as an array.
 		$data = json_decode(trim(wp_remote_retrieve_body($raw_response)), true);
 
+		// If decoding fails, bail.
+		if ($data === null) {
+			return new \WP_Error('update_manager_http_error', __('Invalid API response (invalid JSON)'), $raw_response);
+		}
+
 		// Set retrieved data to the object for reuse elsewhere.
 		$this->component_data = is_array($data) ? $data : [];
 
