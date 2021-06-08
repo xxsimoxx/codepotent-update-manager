@@ -134,26 +134,13 @@ class UpdateManager {
 			esc_html__('Update Manager', 'codepotent-update-manager'),
 			'manage_options',
 			'update-manager',
-			[$this, 'render_overview'],
+			'',
 			'dashicons-update',
 			apply_filters(PLUGIN_PREFIX.'_menu_pos', null)
 			);
 
 		// Remove the duplicated entry.
 		remove_submenu_page('update-manager', 'update-manager');
-
-	}
-
-	/**
-	 * Menu placeholder.
-	 *
-	 * @author John Alarcon
-	 *
-	 * @since 1.0.0
-	 */
-	public function render_overview() {
-
-		return;
 
 	}
 
