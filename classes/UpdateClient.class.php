@@ -50,16 +50,7 @@ class UpdateClient {
 	private $config;
 
 	/**
-	 * Default CP version.
-	 *
-	 * This value is used for comparison in the updates list table by core. This
-	 * property can be set to 4.9.x (whatever x might be at the time,) if you're
-	 * wanting to be exact. The issue with doing that is that you'd have to bump
-	 * that number with every new release of 4.9.x to ensure that core indicates
-	 * 100% compatibility in the table. If your plugin or theme is compatible to
-	 * WordPress 4.9.x, it is compatible with ClassicPress 1.x.x, so, there will
-	 * not be a need for this. Setting it to 4.9.99 ensures don't have to update
-	 * it again.
+	 * Latest CP version.
 	 */
 	private $cp_latest_version = '4.9.99';
 
@@ -97,7 +88,7 @@ class UpdateClient {
 		];
 
 		// Find and store the latest CP version during update process.
-		$this->cp_latest_version = get_option('cp_latest_version', '');
+		$this->cp_latest_version = $this->get_latest_version_number();
 
 		// Hook the update client into the system.
 		$this->init();
@@ -227,9 +218,6 @@ class UpdateClient {
 
 		// Is there a response?
 		if (isset($value->response)) {
-
-			// Ensure the latest ClassicPress version number is available.
-			$this->get_latest_version_number();
 
 			// Get the installed components.
 			$components = $this->get_component_data('query_'.$this->config['type'].'s');
@@ -824,7 +812,7 @@ class UpdateClient {
 		$version = get_transient('codepotent_update_manager_cp_version');
 
 		// Return version number, if now known.
-		if (!empty($version)) {
+		if (false !== $version) {
 			return $version;
 		}
 
@@ -858,8 +846,9 @@ class UpdateClient {
 			$version = str_replace('.json', '', $version);
 		}
 
-		// A transient ensures the query is not run more than every 10 minutes.
-		set_transient('codepotent_update_manager_cp_version', $version, MINUTE_IN_SECONDS * 10);
+		// A transient ensures the query is not run more than every 6 hours.
+		set_transient('codepotent_update_manager_cp_version', $version, HOUR_IN_SECONDS * 6);
+		update_option('cp_latest_version', $version);
 
 		// Return the version string.
 		return $version;
