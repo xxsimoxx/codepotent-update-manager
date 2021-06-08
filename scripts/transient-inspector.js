@@ -24,6 +24,9 @@ jQuery(document).ready(function($) {
 		}
 		var height = $(window).height() * .85;
 		tb_show('', e.target.dataset.url+'&TB_iframe=true&width='+width+'&height='+height);
+		$("#TB_iframeContent").on("load", function(e){
+			$(this).contents().find("#plugin_update_from_iframe").hide();
+		});
 		return false;
 	});
 
