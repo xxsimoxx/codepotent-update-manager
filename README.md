@@ -251,7 +251,28 @@ Position To change the admin menu item's position, this filter can be added to a
 add_filter('codepotent_update_manager_menu_pos', 'some_function_name');
 </pre>
 
-**Menu Item Positions** **1**: _Top_ of menu **2**: below _Dashboard_ **5**: below _Posts_ **10**: below _Media_ **20**: below _Pages_ **25**: below _Comments_ **60**: below _first separator_ **65**: below _Plugins_ **70**: below _Users_ **75**: below _Tools_ **80**: below _Settings_ **100**: below _second separator_ **null**: below _Comments_, in natural order; default --- ### Plugin Images Path & URL These two filters can be used if you already have a particular directory schema under which your plugin's images are stored. These filters would be used in your own plugin. Note that you should always check for the right plugin slug before altering the path, as shown in the examples here. Be sure to replace `{plugin-slug}` with the slug of your own plugin.
+**Menu Item Positions** **1**: _Top_ of menu **2**: below _Dashboard_ **5**: below _Posts_ **10**: below _Media_ **20**: below _Pages_ **25**: below _Comments_ **60**: below _first separator_ **65**: below _Plugins_ **70**: below _Users_ **75**: below _Tools_ **80**: below _Settings_ **100**: below _second separator_ **null**: below _Comments_, in natural order; default 
+
+---
+### Plugin Images Path & URL
+These filters can be used if you already have a particular directory schema under which your plugin's images are stored. These filters would be used in your own plugin.
+
+#### Plugin-specific filters
+Those new filters prevents plugins from accidentally overwrite other's path.
+
+<pre>function new_custom_image_path($path) {
+	return plugin_dir_path(__FILE__).'beautifulimages';
+}
+add_filter('codepotent_update_manager_{plugin-slug}_image_path', 'new_custom_image_path');
+
+function new_custom_image_url($url) {
+	return plugin_dir_url(__FILE__).'beautifulimages';
+}
+add_filter('codepotent_update_manager_{plugin-slug}_image_url', 'new_custom_image_url');
+</pre>
+
+#### Global filters (deprecated since version 2.3.0)
+Note that you should always check for the right plugin slug before altering the path, as shown in the examples here. Be sure to replace `{plugin-slug}` with the slug of your own plugin.
 
 <pre>function my_custom_image_path($path) {
     if (strpos($path, {plugin-slug}) !== false) {
@@ -268,7 +289,6 @@ function my_custom_image_url($url) {
     return $path;
 }
 add_filter('codepotent_update_manager_image_url', 'my_custom_image_url');
-
 </pre>
 
 --- 
