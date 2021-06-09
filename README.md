@@ -91,7 +91,7 @@ Semantic versioning is used throughout. You can push updates for alpha, beta, an
 
 ### Using Custom Images
 
-You can use your own plugin banner and icon images to improve the end user experience. If you have these images, create an `/images/` directory in your plugin and drop them there. They will be automatically discovered and you are free to mix and match any of the following filetypes. If you prefer, you can define your own custom image path; see the <a href="#docs-filters" class="codepotent-plugin-directory-interlink">filters</a> documentation. If you do not have such images, the default system image will be used for the icon, and your plugin modal windows just won't have a header graphic. The following are supported:
+You can use your own plugin banner and icon images to improve the end user experience. If you have these images, create an `/images/` directory in your plugin and drop them there. They will be automatically discovered and you are free to mix and match any of the following filetypes. If you prefer, you can define your own custom image path; see the <a href="#docs-filters">filters</a> documentation. If you do not have such images, the default system image will be used for the icon, and your plugin modal windows just won't have a header graphic. The following are supported:
 
 #### Normal Images
 **SVG**: `icon.svg`, `banner.svg`
@@ -254,7 +254,7 @@ add_filter('codepotent_update_manager_menu_pos', 'some_function_name');
 **Menu Item Positions** **1**: _Top_ of menu **2**: below _Dashboard_ **5**: below _Posts_ **10**: below _Media_ **20**: below _Pages_ **25**: below _Comments_ **60**: below _first separator_ **65**: below _Plugins_ **70**: below _Users_ **75**: below _Tools_ **80**: below _Settings_ **100**: below _second separator_ **null**: below _Comments_, in natural order; default 
 
 ---
-### Plugin Images Path & URL
+### <a name="docs-filters">Plugin Images Path & URL</a>
 These filters can be used if you already have a particular directory schema under which your plugin's images are stored. These filters would be used in your own plugin.
 
 #### Plugin-specific filters
@@ -314,7 +314,7 @@ add_filter('codepotent_update_manager_notification_email_body', 'some_function_n
 For extension authors, this filter allows for a credit link to be appended to the Code Potent footer text. This filter accepts a single argument, `$text`, which is an empty string, by default. Note that all HTML is stripped, except for the <a> tag. The URLs can be as long as needed, but, the visible text and links may be truncated at 50 characters. This filter is for adding a credit link, not for marketing text and upsells; misusing this feature will cause it to be removed.
 
 <pre>function some_function_name($text) {
-    return 'Featuring <a href="#">My Extension</a> by <a href="#">Author Name</a>';    
+    return 'Featuring &lt;a href=&quot;#&quot;&gt;My Extension&lt;/a&gt; by &lt;a href=&quot;#&quot;&gt;Author Name&lt;/a&gt;';    
 }
 add_filter('codepotent_update_manager_extension_footer_{your-slug-here}', 'some_function_name');
 </pre>
