@@ -560,8 +560,8 @@ class UpdateClient {
 		global $cp_version;
 
 		// Initialize the data to be posted.
-		$body = $this->config['post'];
-
+		$body = apply_filters('codepotent_update_manager_filter_'.$this->config['id'].'_client_request', $this->config['post']);
+		
 		if ($action === 'plugin_information') {
 
 			// If querying a single plugin, assign it to the post body.
@@ -719,9 +719,13 @@ class UpdateClient {
 		$image_path = untrailingslashit(WP_PLUGIN_DIR).'/'.$plugin.'/images';
 		$image_url  = untrailingslashit(WP_PLUGIN_URL).'/'.$plugin.'/images';
 
-		// Allow directory location to be filtered.
+		// Allow directory location to be filtered. DEPRECATED FILTERS.
 		$image_path = apply_filters('codepotent_update_manager_image_path', $image_path);
 		$image_url  = apply_filters('codepotent_update_manager_image_url', $image_url);
+
+		// Allow directory location to be filtered. NEW FILTERS.
+		$image_path = apply_filters('codepotent_update_manager_'.$this->config['id'].'_image_path', $image_path);
+		$image_url  = apply_filters('codepotent_update_manager_'.$this->config['id'].'_image_url', $image_url);
 
 		// Banner and icon images are keyed differently; it's a core thing.
 		$image_qualities = [
