@@ -56,7 +56,7 @@ jQuery(document).ready(function($) {
 		var ok = confirm(confirmation);
    		if (!ok) {
    			return
-   		};
+   		}
    		// Get the template text.
 		if ($(this).hasClass('without-examples')) {
 			var value = get_default_text($(this)[0]['dataset']['component']);
@@ -75,7 +75,7 @@ jQuery(document).ready(function($) {
 		var ok = confirm(confirmation);
 		if (!ok) {
 			return
-		};
+		}
 		if ($(this).hasClass('reqs-only')) {
 			var value = get_default_text_requirements(this.dataset.component);
 		} else if ($(this).hasClass('with-examples')) {
