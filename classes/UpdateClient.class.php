@@ -560,8 +560,8 @@ class UpdateClient {
 		global $cp_version;
 
 		// Initialize the data to be posted.
-		$body = $this->config['post'];
-
+		$body = apply_filters('codepotent_update_manager_filter_'.$this->config['id'].'_client_request', $this->config['post']);
+		
 		if ($action === 'plugin_information') {
 
 			// If querying a single plugin, assign it to the post body.

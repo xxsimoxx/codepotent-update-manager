@@ -251,8 +251,6 @@ Position To change the admin menu item's position, this filter can be added to a
 add_filter('codepotent_update_manager_menu_pos', 'some_function_name');
 </pre>
 
---- 
-
 **Menu Item Positions** **1**: _Top_ of menu **2**: below _Dashboard_ **5**: below _Posts_ **10**: below _Media_ **20**: below _Pages_ **25**: below _Comments_ **60**: below _first separator_ **65**: below _Plugins_ **70**: below _Users_ **75**: below _Tools_ **80**: below _Settings_ **100**: below _second separator_ **null**: below _Comments_, in natural order; default --- ### Plugin Images Path & URL These two filters can be used if you already have a particular directory schema under which your plugin's images are stored. These filters would be used in your own plugin. Note that you should always check for the right plugin slug before altering the path, as shown in the examples here. Be sure to replace `{plugin-slug}` with the slug of your own plugin.
 
 <pre>function my_custom_image_path($path) {
@@ -303,6 +301,20 @@ add_filter('codepotent_update_manager_extension_footer_{your-slug-here}', 'some_
 
 --- 
 
+
+### Request body
+This filter allows to add fields to the request made by the `UpdateClient.class.php`. It's useful for plugin authors that wants to pass data to some Update Manager extension. For example Stats for Update Manager uses it to allow plugin authors to give their users the choice to opt-in or out from their site being counted usage in statistics. 
+
+<pre>function some_function_name($body) {
+	if( 'no' === get_option( 'my-slug-usage-statistics' ) ) {
+		$body['sfum'] = 'no-log';
+	}
+	return $body;
+}
+add_filter('codepotent_update_manager_filter_{your-slug-here}_client_request', 'some_function_name');
+</pre>
+
+--- 
 ### Manual Installation <a name="install-manual"></a>
 
 - **Download** the zip file to your local computer
