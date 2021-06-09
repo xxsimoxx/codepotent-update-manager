@@ -9,6 +9,7 @@
  * text of the license is available at https://www.gnu.org/licenses/gpl-2.0.txt.
  * -----------------------------------------------------------------------------
  * Copyright 2021, John Alarcon (Code Potent)
+ *           2021, Simone Fioravanti
  * -----------------------------------------------------------------------------
  */
 

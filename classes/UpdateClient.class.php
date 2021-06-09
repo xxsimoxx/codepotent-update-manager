@@ -6,6 +6,7 @@
  * Author: John Alarcon
  * Author URI: https://codepotent.com
  * API Version: 2.0.0
+ * Last modified on Update Manager release: 2.3.0
  * -----------------------------------------------------------------------------
  * This is free software released under the terms of the General Public License,
  * version 2, or later. It is distributed WITHOUT ANY WARRANTY; without even the
@@ -13,6 +14,7 @@
  * text of the license is available at https://www.gnu.org/licenses/gpl-2.0.txt.
  * -----------------------------------------------------------------------------
  * Copyright 2021, John Alarcon (Code Potent)
+ *           2021, Simone Fioravanti
  * -----------------------------------------------------------------------------
  */
 
