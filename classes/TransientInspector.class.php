@@ -12,6 +12,7 @@
  * text of the license is available at https://www.gnu.org/licenses/gpl-2.0.txt.
  * -----------------------------------------------------------------------------
  * Copyright 2021, John Alarcon (Code Potent)
+ *           2021, Simone Fioravanti
  * -----------------------------------------------------------------------------
  */
 
@@ -671,7 +672,7 @@ class TransientInspector {
 				$markup .= '	<td class="column-description desc">';
 				$markup .= '		<div class="plugin-description"><p>'.$data['Description'].'</p></div>';
 				$markup .= '		<div class="row-actions visible"><p>';
-				$markup .= '			<a class="'.PLUGIN_SLUG.'-thickbox-plugin" href="#" data-url="'.admin_url('/plugin-install.php?tab=plugin-information&plugin='.$plugin->slug.'&section=changelog').'">'.esc_html__('View Changes', 'codepotent-update-manager').'</a>';
+				$markup .= '			<a class="thickbox open-plugin-details-modal '.PLUGIN_SLUG.'-thickbox-plugin" href="#" data-url="'.admin_url('/plugin-install.php?tab=plugin-information&plugin='.$plugin->slug.'&section=changelog').'">'.esc_html__('View Changes', 'codepotent-update-manager').'</a>';
 				if ($endpoint_view_link) {
 					$markup .= ' | '.$endpoint_view_link;
 				}
@@ -756,7 +757,7 @@ class TransientInspector {
 				$markup .= '	<td class="column-description desc">';
 				$markup .= '		<div class="theme-description"><p>'.$data['Description'].'</p></div>';
 				$markup .= '		<div class="row-actions visible"><p>';
-				$markup .= '			<a class="'.PLUGIN_SLUG.'-thickbox-theme" href="#" data-theme="'.$identifier.'">'.esc_html__('Preview', 'codepotent-update-manager').'</a>';
+				$markup .= '			<a class="thickbox open-plugin-details-modal '.PLUGIN_SLUG.'-thickbox-theme" href="#" data-theme="'.$identifier.'">'.esc_html__('Preview', 'codepotent-update-manager').'</a>';
 				if ($endpoint_view_link) {
 					$markup .= ' | '.$endpoint_view_link;
 				}
