@@ -656,7 +656,7 @@ class TransientInspector {
 				}
 				$icon = '';
 				if (!empty($plugin->icons['1x'])) {
-					$icon = '<img style="max-width:48px;" src="'.$plugin->icons['1x'].'">';
+					$icon = '<img style="width:48px;" src="'.$plugin->icons['1x'].'">';
 				}
 				// Get plugin header data.
 				$path = str_replace('\\', '/', $file.$identifier);
