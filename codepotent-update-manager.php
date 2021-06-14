@@ -385,7 +385,7 @@ class UpdateManager {
 			// Contain the footer.
 			$text = '<span id="footer-thankyou" style="vertical-align:text-bottom;">';
 			// Code Potent info and link.
-			$text .= '<span id="footer-thankyou" style="vertical-align:text-bottom;"><a href="'.PLUGIN_AUTHOR_URL.'/" title="'.PLUGIN_DESCRIPTION.'">'.PLUGIN_NAME.'</a> '.PLUGIN_VERSION.' &#8211; by <a href="'.PLUGIN_AUTHOR_URL.'" title="'.VENDOR_TAGLINE.'">'.PLUGIN_AUTHOR.'</a></span>';
+			$text .= '<a href="'.PLUGIN_AUTHOR_URL.'/" title="'.PLUGIN_DESCRIPTION.'">'.PLUGIN_NAME.'</a> '.PLUGIN_VERSION.' &#8211; by <a href="'.PLUGIN_AUTHOR_URL.'" title="'.VENDOR_TAGLINE.'">'.PLUGIN_AUTHOR.'</a>';
 			// Allow extension authors to add their credit link to the footer.
 			if (!empty($GLOBALS['submenu'][PLUGIN_SHORT_SLUG])) {
 				foreach ($GLOBALS['submenu'][PLUGIN_SHORT_SLUG] as $item) {
