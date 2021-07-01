@@ -782,73 +782,73 @@ class TransientInspector {
 	
 	
 		// Were there theme updates? If so, markup their previews; keep hidden.
-		if (!empty($themes->response)) {
-			// Get current (active) theme identifier.
-			$stylesheet = get_option('stylesheet');
-			// Iterate over update data.
-			foreach ($themes->response as $identifier=>$theme) {
-				// Get the current (iteration's) theme object.
-				$this_theme = wp_get_theme($identifier);
-				// Get the Update Manager endpoint related to this theme.
-				$endpoint = get_posts([
-					'post_type' => CPT_FOR_THEME_ENDPOINTS,
-					'post_status' => ['pending', 'publish'],
-					'posts_per_page' => 1,
-					'meta_key' => 'id',
-					'meta_value' => esc_attr($identifier),
-				]);
-				// Determine the description.
-				$description = $this_theme->get('Description');
-				if (!empty($endpoint[0])) {
-					$content = get_post_meta($endpoint[0]->ID, $identifier, true);
-					$content = str_replace('#', '##', $content);
-					$lines = explode("\n", $content);
-					$s = get_sections_data($lines);
-					if (!empty($s['description'])) {
-						$description = markup_generic_section($s['description']);
-						$description = str_replace('<p>', '<p class="theme-description">', $description);
-					}
-					$header = get_header_data($lines);
+		if (empty($themes->response)) {
+			return $markup;
+		}
+		// Get current (active) theme identifier.
+		$stylesheet = get_option('stylesheet');
+		// Iterate over update data.
+		foreach ($themes->response as $identifier=>$theme) {
+			// Get the current (iteration's) theme object.
+			$this_theme = wp_get_theme($identifier);
+			// Get the Update Manager endpoint related to this theme.
+			$endpoint = get_posts([
+				'post_type' => CPT_FOR_THEME_ENDPOINTS,
+				'post_status' => ['pending', 'publish'],
+				'posts_per_page' => 1,
+				'meta_key' => 'id',
+				'meta_value' => esc_attr($identifier),
+			]);
+			// Determine the description.
+			$description = $this_theme->get('Description');
+			if (!empty($endpoint[0])) {
+				$content = get_post_meta($endpoint[0]->ID, $identifier, true);
+				$content = str_replace('#', '##', $content);
+				$lines = explode("\n", $content);
+				$s = get_sections_data($lines);
+				if (!empty($s['description'])) {
+					$description = markup_generic_section($s['description']);
+					$description = str_replace('<p>', '<p class="theme-description">', $description);
 				}
-				// Determine the screenshot image.
-				$image = '';
-				if (file_exists(WP_CONTENT_DIR.'/themes/'.$identifier.'/screenshot.png')) {
-					$image = '<img src="'.WP_CONTENT_URL.'/themes/'.$identifier.'/screenshot.png" alt="">';
-				} else if (file_exists(WP_CONTENT_DIR.'/themes/'.$identifier.'/screenshot.jpg')) {
-					$image = '<img src="'.WP_CONTENT_URL.'/themes/'.$identifier.'/screenshot.jpg" alt="">';
-				}
-				// Determine the tags.
-				$tags = '';
-				if (!empty($header['tags'])) {
-					$tags = $header['tags'];
-				} else if (!empty($this_theme->get('Tags'))) {
-					$tags = implode(', ', $this_theme->get('Tags'));
-				}
-				// Markup the theme similar to core's display.
-				$markup .= '<div class="theme-overlay" id="display-theme-'.$identifier.'" style="display:none;">';
-				$markup .= '	<div class="theme-overlay active">';
-				$markup .= '		<div class="theme-wrap wp-clearfix">';
-				$markup .= '			<div class="theme-about wp-clearfix">';
-				$markup .= '				<div class="theme-screenshots">';
-				$markup .= '					<div class="screenshot">'.$image.'</div>';
-				$markup .= '				</div>';
-				$markup .= '				<div class="theme-info">';
-				if ($identifier === $stylesheet) {
-					$markup .= '					<span class="current-label">'.esc_html__('Current Theme', 'codepotent-update-manager').'</span>';
-				}
-				$markup .= '					<h2 class="theme-name">'.$this_theme->get('Name').'<span class="theme-version">Version: '.$this_theme->get('Version').'</span></h2>';
-				$markup .= '					<p class="theme-author">By <a href="'.$this_theme->get('AuthorURI').'">'.$this_theme->get('Author').'</a></p>';
-				$markup .= '					<div class="theme-description">'.$description.'</div>';
-				$markup .= '					<p class="theme-tags"><span>Tags:</span> '.$tags.'</p>';
-				$markup .= '				</div><!-- .theme-info -->';
-				$markup .= '			</div><!-- .theme-about -->';
-				$markup .= '		</div><!-- .theme-wrap -->';
-				$markup .= '	</div><!-- .theme-overlay.active-->';
-				$markup .= '</div><!-- .theme-overlay #display-theme-'.$identifier.' -->';
+				$header = get_header_data($lines);
+			}
+			// Determine the screenshot image.
+			$image = '';
+			if (file_exists(WP_CONTENT_DIR.'/themes/'.$identifier.'/screenshot.png')) {
+				$image = '<img src="'.WP_CONTENT_URL.'/themes/'.$identifier.'/screenshot.png" alt="">';
+			} else if (file_exists(WP_CONTENT_DIR.'/themes/'.$identifier.'/screenshot.jpg')) {
+				$image = '<img src="'.WP_CONTENT_URL.'/themes/'.$identifier.'/screenshot.jpg" alt="">';
+			}
+			// Determine the tags.
+			$tags = '';
+			if (!empty($header['tags'])) {
+				$tags = $header['tags'];
+			} else if (!empty($this_theme->get('Tags'))) {
+				$tags = implode(', ', $this_theme->get('Tags'));
+			}
+			// Markup the theme similar to core's display.
+			$markup .= '<div class="theme-overlay" id="display-theme-'.$identifier.'" style="display:none;">';
+			$markup .= '	<div class="theme-overlay active">';
+			$markup .= '		<div class="theme-wrap wp-clearfix">';
+			$markup .= '			<div class="theme-about wp-clearfix">';
+			$markup .= '				<div class="theme-screenshots">';
+			$markup .= '					<div class="screenshot">'.$image.'</div>';
+			$markup .= '				</div>';
+			$markup .= '				<div class="theme-info">';
+			if ($identifier === $stylesheet) {
+				$markup .= '					<span class="current-label">'.esc_html__('Current Theme', 'codepotent-update-manager').'</span>';
+			}
+			$markup .= '					<h2 class="theme-name">'.$this_theme->get('Name').'<span class="theme-version">Version: '.$this_theme->get('Version').'</span></h2>';
+			$markup .= '					<p class="theme-author">By <a href="'.$this_theme->get('AuthorURI').'">'.$this_theme->get('Author').'</a></p>';
+			$markup .= '					<div class="theme-description">'.$description.'</div>';
+			$markup .= '					<p class="theme-tags"><span>Tags:</span> '.$tags.'</p>';
+			$markup .= '				</div><!-- .theme-info -->';
+			$markup .= '			</div><!-- .theme-about -->';
+			$markup .= '		</div><!-- .theme-wrap -->';
+			$markup .= '	</div><!-- .theme-overlay.active-->';
+			$markup .= '</div><!-- .theme-overlay #display-theme-'.$identifier.' -->';
 
-			} // foreach ($themes->response as $identifier=>$theme) {
-
-		} // if (!empty($themes->response)) {
+		} // foreach ($themes->response as $identifier=>$theme) {
 
 		// Return the markup.
 		return $markup;
