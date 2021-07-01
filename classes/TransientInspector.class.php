@@ -498,7 +498,9 @@ class TransientInspector {
 		// Markup overview.
 		if ((empty($this->action) || empty($this->component)) ||
 			($this->action == 'show' && $this->component === 'all')) {
-				$markup .= $this->markup_transient_inspector_overview($plugins, $themes);
+				$markup .= $this->markup_deletion_links($plugins, $themes);
+				$markup .= $this->markup_transient_inspector_overview_plugins($plugins);
+				$markup .= $this->markup_transient_inspector_overview_themes($themes);
 		} else
 
 		// User is requesting plugin data and has sufficient permission?
@@ -596,26 +598,10 @@ class TransientInspector {
 	 *
 	 * @return string HTML markup.
 	 */
-	private function markup_transient_inspector_overview($plugins, $themes) {
+	private function markup_transient_inspector_overview_plugins($plugins) {
 
-		// Initialization.
 		$markup = '';
-
-		// Initialization.
-		$plugin_update_count = $theme_update_count = 0;
-
-		// Get plugin update count.
-		if (!empty($plugins->response)) {
-			$plugin_update_count += count($plugins->response);
-		}
-
-		// Get theme update count.
-		if (!empty($themes->response)) {
-			$theme_update_count += count($themes->response);
-		}
-
-		// Add the deletion links.
-		$markup .= $this->markup_deletion_links($plugins, $themes);
+		$plugin_update_count = count($plugins->response);
 
 		// Plugin update table.
 		$markup .= '<h2>'.esc_html__('Plugins', 'codepotent-update-manager').' ('.$plugin_update_count.')</h2>';
@@ -631,7 +617,7 @@ class TransientInspector {
 		$markup .= '	<tbody id="the-plugin-list">';
 		if (empty($plugins->response)) {
 			$markup .= '<tr>';
-			$markup .= '	<th scope="row" class="check-column"><input type="checkbox" disabled></th>';
+			$markup .= '	<th scope="row" class="check-column"><input type="checkbox" disabled style="display: none"></th>';
 			$markup .= '	<td colspan="3"><div class="plugin-description"><p>'.esc_html__('All plugins are up to date.', 'codepotent-update-manager').'</p></div></td>';
 			$markup .= '</tr>';
 		}
@@ -700,7 +686,14 @@ class TransientInspector {
 		$markup .= '</tfoot>';
 		$markup .= '</table>';
 
-		// Plugin table complete; move on to theme table.
+		return $markup;
+	}
+	
+	private function markup_transient_inspector_overview_themes($themes) {
+
+		// Initialization.
+		$markup = '';
+		$theme_update_count =count($themes->response); 
 
 		// Theme update table.
 		$markup .= '<h2>'.esc_html__('Themes', 'codepotent-update-manager').' ('.$theme_update_count.')</h2>';
@@ -718,7 +711,7 @@ class TransientInspector {
 		$current_theme = get_option('stylesheet');
 		if (empty($themes->response)) {
 			$markup .= '<tr>';
-			$markup .= '	<th scope="row" class="check-column"><input type="checkbox" disabled></th>';
+			$markup .= '	<th scope="row" class="check-column"><input type="checkbox" disabled style="display: none"></th>';
 			$markup .= '	<td colspan="3"><div class="theme-description"><p>'.esc_html__('All themes are up to date.', 'codepotent-update-manager').'</p></div></td>';
 			$markup .= '</tr>';
 		}
@@ -786,6 +779,8 @@ class TransientInspector {
 		$markup .= '</tfoot>';
 		$markup .= '</table>';
 
+	
+	
 		// Were there theme updates? If so, markup their previews; keep hidden.
 		if (!empty($themes->response)) {
 			// Get current (active) theme identifier.
