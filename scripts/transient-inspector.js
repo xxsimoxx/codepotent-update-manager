@@ -27,7 +27,7 @@ jQuery(document).ready(function($) {
 		tb_show('', e.target.dataset.url+'&TB_iframe=true&width='+width+'&height='+height);
 		$("#TB_iframeContent").on("load", function(e){
 			button=$(this).contents().find("#plugin_update_from_iframe");
-			button.on("click", function(e){
+			button.on("click", function(){
 				window.location.href = button.attr('href');
 			});
 		});

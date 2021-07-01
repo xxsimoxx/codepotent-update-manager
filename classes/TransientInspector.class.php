@@ -629,66 +629,66 @@ class TransientInspector {
 		$markup .= '		</tr>';
 		$markup .= '	</thead>';
 		$markup .= '	<tbody id="the-plugin-list">';
-		if (!empty($plugins->response)) {
-			$active_plugins = get_option('active_plugins', []);
-			$file = plugin_dir_path(dirname(dirname(__FILE__)));
-			foreach ($plugins->response as $identifier=>$plugin) {
-				// Initialization.
-				$endpoint_view_link = '';
-				$endpoint_edit_link = '';
-				// Try to get an endpoint for this particular plugin.
-				$endpoint = get_posts([
-					'post_type' => CPT_FOR_PLUGIN_ENDPOINTS,
-					'post_status' => ['pending', 'publish'],
-					'posts_per_page' => 1,
-					'meta_key' => 'id',
-					'meta_value' => esc_attr($identifier),
-				]);
-				// Got an endpoint? Setup links to view and edit.
-				if (!empty($endpoint)) {
-					$endpoint_view_link = '<a href="'.site_url().'/?update=plugin_information&plugin='.$identifier.'&site_url='.site_url().'">'.esc_html__('View Endpoint', 'codepotent-update-manager').'</a>';
-					$endpoint_edit_link = '<a href="'.admin_url('/post.php?post='.$endpoint[0]->ID.'&action=edit').'">'.esc_html__('Edit Endpoint', 'codepotent-update-manager').'</a>';
-				}
-				// Determine if plugin is active or inactive; for styling.
-				$state = 'inactive';
-				if (in_array($identifier, $active_plugins, true)) {
-					$state = 'active';
-				}
-				$icon = '';
-				if (!empty($plugin->icons['1x'])) {
-					$icon = '<img style="width:48px;" src="'.$plugin->icons['1x'].'">';
-				}
-				// Get plugin header data.
-				$path = str_replace('\\', '/', $file.$identifier);
-				$data = get_plugin_data($path, false, true);
-				// Markup the row.
-				$markup .= '<tr class="'.$state.'" data-slug="'.$plugin->slug.'" data-plugin="'.$identifier.'">';
-				$markup .= '	<th scope="row" class="check-column"><input type="checkbox" disabled></th>';
-				$markup .= '	<td>'.$icon.'</td>';
-				$markup .= '	<td class="plugin-title column-primary" style="white-space:nowrap;">';
-				$markup .= 			(($state==='active')?'<strong>':'').$data['Name'].(($state==='active')?'</strong>':'');
-				$markup .= '		<div style="color:#555;" class="row-actions visible">'.$data['Version'].' <span style="font-size:20px;">&rarr;</span> '.$plugin->new_version.'</div>';
-				$markup .= '	</td>';
-				$markup .= '	<td class="column-description desc">';
-				$markup .= '		<div class="plugin-description"><p>'.$data['Description'].'</p></div>';
-				$markup .= '		<div class="row-actions visible"><p>';
-				$markup .= '			<a class="thickbox open-plugin-details-modal '.PLUGIN_SLUG.'-thickbox-plugin" href="#" data-url="'.admin_url('/plugin-install.php?tab=plugin-information&plugin='.$plugin->slug.'&section=changelog').'">'.esc_html__('View Changes', 'codepotent-update-manager').'</a>';
-				if ($endpoint_view_link) {
-					$markup .= ' | '.$endpoint_view_link;
-				}
-				if ($endpoint_edit_link) {
-					$markup .= ' | '.$endpoint_edit_link;
-				}
-				$markup .= '		</p></div>';
-				$markup .= '	</td>';
-				$markup .= '</tr>';
-			}
-		} else {
+		if (empty($plugins->response)) {
 			$markup .= '<tr>';
 			$markup .= '	<th scope="row" class="check-column"><input type="checkbox" disabled></th>';
 			$markup .= '	<td colspan="3"><div class="plugin-description"><p>'.esc_html__('All plugins are up to date.', 'codepotent-update-manager').'</p></div></td>';
 			$markup .= '</tr>';
 		}
+		$active_plugins = get_option('active_plugins', []);
+		$file = plugin_dir_path(dirname(dirname(__FILE__)));
+		foreach ($plugins->response as $identifier=>$plugin) {
+			// Initialization.
+			$endpoint_view_link = '';
+			$endpoint_edit_link = '';
+			// Try to get an endpoint for this particular plugin.
+			$endpoint = get_posts([
+				'post_type' => CPT_FOR_PLUGIN_ENDPOINTS,
+				'post_status' => ['pending', 'publish'],
+				'posts_per_page' => 1,
+				'meta_key' => 'id',
+				'meta_value' => esc_attr($identifier),
+			]);
+			// Got an endpoint? Setup links to view and edit.
+			if (!empty($endpoint)) {
+				$endpoint_view_link = '<a href="'.site_url().'/?update=plugin_information&plugin='.$identifier.'&site_url='.site_url().'">'.esc_html__('View Endpoint', 'codepotent-update-manager').'</a>';
+				$endpoint_edit_link = '<a href="'.admin_url('/post.php?post='.$endpoint[0]->ID.'&action=edit').'">'.esc_html__('Edit Endpoint', 'codepotent-update-manager').'</a>';
+			}
+			// Determine if plugin is active or inactive; for styling.
+			$state = 'inactive';
+			if (in_array($identifier, $active_plugins, true)) {
+				$state = 'active';
+			}
+			$icon = '';
+			if (!empty($plugin->icons['1x'])) {
+				$icon = '<img style="width:48px;" src="'.$plugin->icons['1x'].'">';
+			}
+			// Get plugin header data.
+			$path = str_replace('\\', '/', $file.$identifier);
+			$data = get_plugin_data($path, false, true);
+			// Markup the row.
+			$markup .= '<tr class="'.$state.'" data-slug="'.$plugin->slug.'" data-plugin="'.$identifier.'">';
+			$markup .= '	<th scope="row" class="check-column"><input type="checkbox" disabled></th>';
+			$markup .= '	<td>'.$icon.'</td>';
+			$markup .= '	<td class="plugin-title column-primary" style="white-space:nowrap;">';
+			$markup .= 			(($state==='active')?'<strong>':'').$data['Name'].(($state==='active')?'</strong>':'');
+			$markup .= '		<div style="color:#555;" class="row-actions visible">'.$data['Version'].' <span style="font-size:20px;">&rarr;</span> '.$plugin->new_version.'</div>';
+			$markup .= '	</td>';
+			$markup .= '	<td class="column-description desc">';
+			$markup .= '		<div class="plugin-description"><p>'.$data['Description'].'</p></div>';
+			$markup .= '		<div class="row-actions visible"><p>';
+			$markup .= '			<a class="thickbox open-plugin-details-modal '.PLUGIN_SLUG.'-thickbox-plugin" href="#" data-url="'.admin_url('/plugin-install.php?tab=plugin-information&plugin='.$plugin->slug.'&section=changelog').'">'.esc_html__('View Changes', 'codepotent-update-manager').'</a>';
+			if ($endpoint_view_link) {
+				$markup .= ' | '.$endpoint_view_link;
+			}
+			if ($endpoint_edit_link) {
+				$markup .= ' | '.$endpoint_edit_link;
+			}
+			$markup .= '		</p></div>';
+			$markup .= '	</td>';
+			$markup .= '</tr>';
+		}
+
 		$markup .= '</tbody>';
 		$markup .= '<tfoot>';
 		$markup .= '	<tr>';
@@ -716,64 +716,65 @@ class TransientInspector {
 		$markup .= '	<tbody id="the-theme-list">';
 		// Get current theme slug.
 		$current_theme = get_option('stylesheet');
-		if (!empty($themes->response)) {
-			foreach ($themes->response as $identifier=>$theme) {
-				// Initialization.
-				$endpoint_view_link = '';
-				$endpoint_edit_link = '';
-				// Try to get an endpoint for this particular plugin.
-				$endpoint = get_posts([
-					'post_type' => CPT_FOR_THEME_ENDPOINTS,
-					'post_status' => ['pending', 'publish'],
-					'posts_per_page' => 1,
-					'meta_key' => 'id',
-					'meta_value' => esc_attr($identifier),
-				]);
-				// Got an endpoint? Setup links to view and edit.
-				if (!empty($endpoint)) {
-					$endpoint_view_link = '<a href="'.site_url().'/?update=theme_information&theme='.$identifier.'&site_url='.site_url().'">'.esc_html__('View Endpoint', 'codepotent-update-manager').'</a>';
-					$endpoint_edit_link = '<a href="'.admin_url('/post.php?post='.$endpoint[0]->ID.'&action=edit').'">'.esc_html__('Edit Endpoint', 'codepotent-update-manager').'</a>';
-				}
-				$state = 'inactive';
-				if ($identifier === $current_theme) {
-					$state = 'active';
-				}
-				$screenshot = '';
-				if (file_exists(WP_CONTENT_DIR.'/themes/'.$theme['theme'].'/screenshot.png')) {
-					$screenshot = '<img src="'.WP_CONTENT_URL.'/themes/'.$theme['theme'].'/screenshot.png" style="max-width:48px;">';
-				} else if (file_exists(WP_CONTENT_DIR.'/themes/'.$theme['theme'].'/screenshot.jpg')) {
-					$screenshot = '<img src="'.WP_CONTENT_URL.'/themes/'.$theme['theme'].'/screenshot.jpg" style="max-width:48px;">';
-				}
-				$data = wp_get_theme($theme['theme']);
-				$markup .= '<tr class="'.$state.'" data-slug="'.$identifier.'" data-theme="'.$identifier.'">';
-				$markup .= '	<th scope="row" class="check-column"><input type="checkbox" disabled></th>';
-				$markup .= '	<td>'.$screenshot.'</td>';
-				$markup .= '	<td class="theme-title column-primary" style="white-space:nowrap;">';
-				$markup .= (($state==='active')?'<strong>':'').$data['Name'].(($state==='active')?'</strong>':'');
-				$markup .= '		<div style="color:#555;" class="row-actions visible"><p>';
-				$markup .= 				$data['Version'].' <span style="font-size:20px;">&rarr;</span> '.$theme['new_version'];
-				$markup .= '</p></div>';
-				$markup .= '	</td>';
-				$markup .= '	<td class="column-description desc">';
-				$markup .= '		<div class="theme-description"><p>'.$data['Description'].'</p></div>';
-				$markup .= '		<div class="row-actions visible"><p>';
-				$markup .= '			<a class="thickbox open-plugin-details-modal '.PLUGIN_SLUG.'-thickbox-theme" href="#" data-theme="'.$identifier.'">'.esc_html__('Preview', 'codepotent-update-manager').'</a>';
-				if ($endpoint_view_link) {
-					$markup .= ' | '.$endpoint_view_link;
-				}
-				if ($endpoint_edit_link) {
-					$markup .= ' | '.$endpoint_edit_link;
-				}
-				$markup .= '		</p></div>';
-				$markup .= '	</td>';
-				$markup .= '</tr>';
-			}
-		} else {
+		if (empty($themes->response)) {
 			$markup .= '<tr>';
 			$markup .= '	<th scope="row" class="check-column"><input type="checkbox" disabled></th>';
 			$markup .= '	<td colspan="3"><div class="theme-description"><p>'.esc_html__('All themes are up to date.', 'codepotent-update-manager').'</p></div></td>';
 			$markup .= '</tr>';
 		}
+		foreach ($themes->response as $identifier=>$theme) {
+			// Initialization.
+			$endpoint_view_link = '';
+			$endpoint_edit_link = '';
+			// Try to get an endpoint for this particular plugin.
+			$endpoint = get_posts([
+				'post_type' => CPT_FOR_THEME_ENDPOINTS,
+				'post_status' => ['pending', 'publish'],
+				'posts_per_page' => 1,
+				'meta_key' => 'id',
+				'meta_value' => esc_attr($identifier),
+			]);
+			// Got an endpoint? Setup links to view and edit.
+			if (!empty($endpoint)) {
+				$endpoint_view_link = '<a href="'.site_url().'/?update=theme_information&theme='.$identifier.'&site_url='.site_url().'">'.esc_html__('View Endpoint', 'codepotent-update-manager').'</a>';
+				$endpoint_edit_link = '<a href="'.admin_url('/post.php?post='.$endpoint[0]->ID.'&action=edit').'">'.esc_html__('Edit Endpoint', 'codepotent-update-manager').'</a>';
+			}
+			$state = 'inactive';
+			if ($identifier === $current_theme) {
+				$state = 'active';
+			}
+			$screenshot = '';
+			if (file_exists(WP_CONTENT_DIR.'/themes/'.$theme['theme'].'/screenshot.png')) {
+				$screenshot = '<img src="'.WP_CONTENT_URL.'/themes/'.$theme['theme'].'/screenshot.png" style="max-width:48px;">';
+			} else if (file_exists(WP_CONTENT_DIR.'/themes/'.$theme['theme'].'/screenshot.jpg')) {
+				$screenshot = '<img src="'.WP_CONTENT_URL.'/themes/'.$theme['theme'].'/screenshot.jpg" style="max-width:48px;">';
+			}
+			$data = wp_get_theme($theme['theme']);
+			$markup .= '<tr class="'.$state.'" data-slug="'.$identifier.'" data-theme="'.$identifier.'">';
+			$markup .= '	<th scope="row" class="check-column"><input type="checkbox" disabled></th>';
+			$markup .= '	<td>'.$screenshot.'</td>';
+			$markup .= '	<td class="theme-title column-primary" style="white-space:nowrap;">';
+			$markup .= (($state==='active')?'<strong>':'').$data['Name'].(($state==='active')?'</strong>':'');
+			$markup .= '		<div style="color:#555;" class="row-actions visible"><p>';
+			$markup .= 				$data['Version'].' <span style="font-size:20px;">&rarr;</span> '.$theme['new_version'];
+			$markup .= '</p></div>';
+			$markup .= '	</td>';
+			$markup .= '	<td class="column-description desc">';
+			$markup .= '		<div class="theme-description"><p>'.$data['Description'].'</p></div>';
+			$markup .= '		<div class="row-actions visible"><p>';
+			$markup .= '			<a class="thickbox open-plugin-details-modal '.PLUGIN_SLUG.'-thickbox-theme" href="#" data-theme="'.$identifier.'">'.esc_html__('Preview', 'codepotent-update-manager').'</a>';
+			if ($endpoint_view_link) {
+				$markup .= ' | '.$endpoint_view_link;
+			}
+			if ($endpoint_edit_link) {
+				$markup .= ' | '.$endpoint_edit_link;
+			}
+			$markup .= '		</p></div>';
+			$markup .= '	</td>';
+			$markup .= '</tr>';
+		}
+
+
 		$markup .= '</tbody>';
 		$markup .= '<tfoot>';
 		$markup .= '	<tr>';
