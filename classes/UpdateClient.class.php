@@ -233,7 +233,7 @@ class UpdateClient {
 			foreach($components as $component=>$data) {
 
 				// If necessary check if the new package come from the right source.
-				if (defined(__NAMESPACE__.'\SECURE_SOURCE') && isset($data['package']) && strpos($data['package'], SECURE_SOURCE)!== 0) {
+				if (defined(__NAMESPACE__.'\SECURE_SOURCE') && isset($data['package']) && strpos($data['package'], SECURE_SOURCE) !== 0) {
 					unset($value->response[$component]);
 					continue;
 				}
