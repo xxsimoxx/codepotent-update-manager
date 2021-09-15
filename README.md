@@ -36,9 +36,10 @@ To setup a plugin to work with the Update Manager, the following general steps a
 ### Adding the Update Client file to a Plugin
 
 1. Copy the `UpdateClient.class.php` file (from the Update Manager plugin) into your plugin's file structure.
-1. Set `namespace` to a unique value; line 25.
-1. Set `UPDATE_SERVER` to the URL where your _Update Manager_ plugin is installed; line 28.
-1. Set `UPDATE_TYPE` to 'plugin'; line 31.
+1. Set `namespace` to a unique value; line 22.
+1. Set `UPDATE_SERVER` to the URL where your _Update Manager_ plugin is installed; line 25.
+1. Set `SECURE_SOURCE` to the starting part of the URL of the updated zip file if you want to add an extra layer of security; line 30. See line 236 to understand how check is done.
+1. Set `UPDATE_TYPE` to 'plugin'; line 33.
 1. Use `require_once('/path/to/UpdateClient.class.php')` in your plugin's primary PHP file to run the update client.
 
 ### Creating an Update Endpoint for a Plugin
