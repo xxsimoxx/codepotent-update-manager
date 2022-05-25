@@ -513,32 +513,6 @@ class UpdateManager {
 	}
 
 	/**
-	 * Helper for plugin uninstall.
-	 *
-	 * Delete all custom post types.
-	 *
-	 * @author Simone Fioravanti
-	 *
-	 * @since 2.4.1
-	 */
-	private static function delete_all_cpts() {
-		// Make sure the plugin's constants are available.
-		if (!defined(__NAMESPACE__.'\PLUGIN_VERSION')) {
-			require_once('/includes/constants.php');
-		}
-		// Get ids for all CPT items created by the plugin.
-		$posts = get_posts([
-				'post_type'      => CPT_FOR_PLUGIN_ENDPOINTS,
-				'post_status'    => ['draft', 'pending', 'publish', 'trash'],
-				'posts_per_page' => -1,
-				'fields'         => 'ids'
-		]);
-		foreach ($posts as $post) {
-			wp_delete_post($post->ID, true);
-		}
-	}
-
-	/**
 	 * Plugin uninstall.
 	 *
 	 * Cleanup activities for plugin deletion.
@@ -549,26 +523,28 @@ class UpdateManager {
 	 */
 	public static function uninstall_plugin() {
 
-		$me = new self();
-
-		if (!is_multisite()) {
-			$me->delete_all_cpts();
-			delete_option('cp_latest_version');
-			return;
+		// Make sure the plugin's constants are available.
+		if (!defined(__NAMESPACE__.'\PLUGIN_VERSION')) {
+			require_once('/includes/constants.php');
 		}
 
-		// Multisite
-		global $wpdb;
-		$blog_ids = $wpdb->get_col("SELECT blog_id FROM $wpdb->blogs");
-		$original_blog_id = get_current_blog_id();
+		// Get ids for all CPT items created by the plugin.
+		$posts = get_posts([
+				'post_type'      => CPT_FOR_PLUGIN_ENDPOINTS,
+				'post_status'    => ['draft', 'pending', 'publish', 'trash'],
+				'posts_per_page' => -1,
+				'fields'         => 'ids'
+		]);
 
-		foreach ($blog_ids as $blog_id) {
-			switch_to_blog($blog_id);
-			$me->delete_all_cpts();
-			delete_option('cp_latest_version');
+		// Delete posts, metadata, comments, all in one-fell-swoop.
+		if (!is_wp_error($posts) && !empty($posts)) {
+			foreach ($posts as $post) {
+				wp_delete_post($post->ID, true);
+			}
 		}
 
-		switch_to_blog($original_blog_id);
+		// Delete options set by the plugin.
+		delete_option('cp_latest_version');
 
 	}
 
