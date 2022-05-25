@@ -4,7 +4,7 @@
  * -----------------------------------------------------------------------------
  * Plugin Name: Update Manager
  * Description: Painlessly push updates to your ClassicPress plugin users! Serve updates from GitHub, your own site, or somewhere in the cloud. 100% integrated with the ClassicPress update process; slim and performant.
- * Version: 2.4.0
+ * Version: 2.4.1
  * Author: Simone Fioravanti
  * Author URI: https://software.gieffeedizioni.it
  * Plugin URI: https://software.gieffeedizioni.it
@@ -513,6 +513,32 @@ class UpdateManager {
 	}
 
 	/**
+	 * Helper for plugin uninstall.
+	 *
+	 * Delete all custom post types.
+	 *
+	 * @author Simone Fioravanti
+	 *
+	 * @since 2.4.1
+	 */
+	private static function delete_all_cpts() {
+		// Make sure the plugin's constants are available.
+		if (!defined(__NAMESPACE__.'\PLUGIN_VERSION')) {
+			require_once('/includes/constants.php');
+		}
+		// Get ids for all CPT items created by the plugin.
+		$posts = get_posts([
+				'post_type'      => CPT_FOR_PLUGIN_ENDPOINTS,
+				'post_status'    => ['draft', 'pending', 'publish', 'trash'],
+				'posts_per_page' => -1,
+				'fields'         => 'ids'
+		]);
+		foreach ($posts as $post) {
+			wp_delete_post($post->ID, true);
+		}
+	}
+
+	/**
 	 * Plugin uninstall.
 	 *
 	 * Cleanup activities for plugin deletion.
@@ -523,28 +549,26 @@ class UpdateManager {
 	 */
 	public static function uninstall_plugin() {
 
-		// Make sure the plugin's constants are available.
-		if (!defined(__NAMESPACE__.'\PLUGIN_VERSION')) {
-			require_once('/includes/constants.php');
+		$me = new self();
+
+		if (!is_multisite()) {
+			$me->delete_all_cpts();
+			delete_option('cp_latest_version');
+			return;
 		}
 
-		// Get ids for all CPT items created by the plugin.
-		$posts = get_posts([
-				'post_type'      => CPT_FOR_PLUGIN_ENDPOINTS,
-				'post_status'    => ['draft', 'pending', 'publish', 'trash'],
-				'posts_per_page' => -1,
-				'fields'         => 'ids'
-		]);
+		// Multisite
+		global $wpdb;
+		$blog_ids = $wpdb->get_col("SELECT blog_id FROM $wpdb->blogs");
+		$original_blog_id = get_current_blog_id();
 
-		// Delete posts, metadata, comments, all in one-fell-swoop.
-		if (!is_wp_error($posts) && !empty($posts)) {
-			foreach ($posts as $post) {
-				wp_delete_post($post->ID, true);
-			}
+		foreach ($blog_ids as $blog_id) {
+			switch_to_blog($blog_id);
+			$me->delete_all_cpts();
+			delete_option('cp_latest_version');
 		}
 
-		// Delete options set by the plugin.
-		delete_option('cp_latest_version');
+		switch_to_blog($original_blog_id);
 
 	}
 
