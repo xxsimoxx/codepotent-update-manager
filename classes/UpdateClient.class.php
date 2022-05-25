@@ -3,18 +3,18 @@
 /**
  * -----------------------------------------------------------------------------
  * Purpose: Remote client to communicate with the Update Manager plugin.
- * Author: John Alarcon
- * Author URI: https://codepotent.com
+ * Author: Simone Fioravanti
+ * Author URI: https://software.gieffeedizioni.it
  * API Version: 2.0.0
- * Last modified on Update Manager release: 2.4.0
+ * Last modified on Update Manager release: 2.4.1
  * -----------------------------------------------------------------------------
  * This is free software released under the terms of the General Public License,
  * version 2, or later. It is distributed WITHOUT ANY WARRANTY; without even the
  * implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. Full
  * text of the license is available at https://www.gnu.org/licenses/gpl-2.0.txt.
  * -----------------------------------------------------------------------------
- * Copyright 2021, John Alarcon (Code Potent)
- *           2021, Simone Fioravanti
+ * Copyright 2021,		John Alarcon (Code Potent)
+ *           2021-2022,	Simone Fioravanti
  * -----------------------------------------------------------------------------
  */
 
@@ -382,7 +382,11 @@ class UpdateClient {
 			$anchors_string = implode('', $component_meta);
 			$anchor_text = esc_html__('View details');
 			if (!preg_match('|(\<a[ \s\S\d]*)('.$anchor_text.')(<\/a>)|', $anchors_string)) {
-				$component_meta[] = '<a class="thickbox open-plugin-details-modal" href="'.admin_url('/'.$this->config['type'].'-install.php?tab='.$this->config['type'].'-information&'.$this->config['type'].'='.$this->server_slug.'&TB_iframe=true&width=600&height=550').'">'.$anchor_text.'</a>';
+				if (is_multisite()) {
+					$component_meta[] = '<a class="thickbox" href="'.network_admin_url('/'.$this->config['type'].'-install.php?tab='.$this->config['type'].'-information&'.$this->config['type'].'='.$this->server_slug.'&TB_iframe=true&width=600&height=550').'">'.$anchor_text.'</a>';
+				} else {
+					$component_meta[] = '<a class="thickbox" href="'.admin_url('/'.$this->config['type'].'-install.php?tab='.$this->config['type'].'-information&'.$this->config['type'].'='.$this->server_slug.'&TB_iframe=true&width=600&height=550').'">'.$anchor_text.'</a>';
+				}
 			}
 		}
 
