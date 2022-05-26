@@ -4,7 +4,7 @@
  * -----------------------------------------------------------------------------
  * Plugin Name: Update Manager
  * Description: Painlessly push updates to your ClassicPress plugin users! Serve updates from GitHub, your own site, or somewhere in the cloud. 100% integrated with the ClassicPress update process; slim and performant.
- * Version: 2.4.1
+ * Version: 2.5.0-dev
  * Author: Simone Fioravanti
  * Author URI: https://software.gieffeedizioni.it
  * Plugin URI: https://software.gieffeedizioni.it
@@ -105,6 +105,9 @@ class UpdateManager {
 
 		// Plugin deletion.
 		register_uninstall_hook(__FILE__, [__CLASS__, 'uninstall_plugin']);
+		
+		// Configuration for BeClassicPress
+		$this->be_config();
 
 		// Setup the plugin endpoint post types.
 		new PluginEndpoint;
@@ -113,8 +116,24 @@ class UpdateManager {
 		new ThemeEndpoint;
 
 		// Setup the transient inspector.
-		new TransientInspector;
+		if (apply_filters(PLUGIN_PREFIX.'_transient_inspector', true)) {
+			new TransientInspector;
+		}			
+			
+	}
 
+	public function be_config() {
+	
+		// Move UM menu upper
+		add_filter(PLUGIN_PREFIX.'_menu_pos', function($current) {
+			return 2;
+		});
+		
+		// Remove transient inspector
+		add_filter(PLUGIN_PREFIX.'_transient_inspector', function($current) {
+			return false;
+		});
+		
 	}
 
 	/**
@@ -513,15 +532,15 @@ class UpdateManager {
 	}
 
 	/**
-	 * Plugin uninstall.
+	 * Remove all plugin data.
 	 *
 	 * Cleanup activities for plugin deletion.
 	 *
 	 * @author John Alarcon
 	 *
-	 * @since 1.0.0
+	 * @since 2.5.0
 	 */
-	public static function uninstall_plugin() {
+	public static function clean_all_data() {
 
 		// Make sure the plugin's constants are available.
 		if (!defined(__NAMESPACE__.'\PLUGIN_VERSION')) {
@@ -545,6 +564,38 @@ class UpdateManager {
 
 		// Delete options set by the plugin.
 		delete_option('cp_latest_version');
+
+	}
+
+	/**
+	 * Plugin uninstall.
+	 *
+	 * Cleanup activities for plugin deletion.
+	 *
+	 * @author Simone Fioravanti
+	 *
+	 * @since 1.0.0
+	 */
+	public static function uninstall_plugin() {
+
+		$me = new self();
+
+		if (!is_multisite()) {
+			$me->clean_all_data();
+			return;
+		}
+
+		// Multisite
+		global $wpdb;
+		$blog_ids = $wpdb->get_col("SELECT blog_id FROM $wpdb->blogs");
+		$original_blog_id = get_current_blog_id();
+
+		foreach ($blog_ids as $blog_id) {
+			switch_to_blog($blog_id);
+			$me->clean_all_data();
+		}
+
+		switch_to_blog($original_blog_id);
 
 	}
 

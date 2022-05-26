@@ -407,7 +407,7 @@ class ThemeEndpoint {
 		$identifier = get_post_meta($post->ID, 'id', true);
 
 		// User has no permission? Bail.
-		if (!current_user_can('update_themes', $post_id)) {
+		if (!current_user_can('manage_options')) {
 			return $post_id;
 		}
 
