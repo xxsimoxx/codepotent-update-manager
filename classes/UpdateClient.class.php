@@ -6,7 +6,7 @@
  * Author: Simone Fioravanti
  * Author URI: https://software.gieffeedizioni.it
  * API Version: 2.0.0
- * Last modified on Update Manager release: 2.4.1
+ * Last modified on Update Manager release: 2.4.2
  * -----------------------------------------------------------------------------
  * This is free software released under the terms of the General Public License,
  * version 2, or later. It is distributed WITHOUT ANY WARRANTY; without even the
@@ -383,7 +383,9 @@ class UpdateClient {
 			$anchor_text = esc_html__('View details');
 			if (!preg_match('|(\<a[ \s\S\d]*)('.$anchor_text.')(<\/a>)|', $anchors_string)) {
 				if (is_multisite()) {
-					$component_meta[] = '<a class="thickbox" href="'.network_admin_url('/'.$this->config['type'].'-install.php?tab='.$this->config['type'].'-information&'.$this->config['type'].'='.$this->server_slug.'&TB_iframe=true&width=600&height=550').'">'.$anchor_text.'</a>';
+					if(current_user_can('update_plugins')) {
+						$component_meta[] = '<a class="thickbox" href="'.network_admin_url('/'.$this->config['type'].'-install.php?tab='.$this->config['type'].'-information&'.$this->config['type'].'='.$this->server_slug.'&TB_iframe=true&width=600&height=550').'">'.$anchor_text.'</a>';
+					}
 				} else {
 					$component_meta[] = '<a class="thickbox" href="'.admin_url('/'.$this->config['type'].'-install.php?tab='.$this->config['type'].'-information&'.$this->config['type'].'='.$this->server_slug.'&TB_iframe=true&width=600&height=550').'">'.$anchor_text.'</a>';
 				}
