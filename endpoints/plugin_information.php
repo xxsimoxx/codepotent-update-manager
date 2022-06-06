@@ -35,7 +35,7 @@ header('Content-Type: application/json; charset=utf-8');
 header('Expires: 0');
 
 // Output JSON.
-echo json_encode($data);
+echo wp_json_encode($data);
 
 // Bail.
 exit;
