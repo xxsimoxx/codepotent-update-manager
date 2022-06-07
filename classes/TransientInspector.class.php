@@ -97,7 +97,7 @@ class TransientInspector {
 			add_thickbox();
 
 			// Enqueue transient inspector assets.
-			wp_enqueue_script(PLUGIN_SLUG.'-transient-inspector', URL_SCRIPTS.'/transient-inspector.js', ['jquery'], time());
+			wp_enqueue_script(PLUGIN_SLUG.'-transient-inspector', URL_SCRIPTS.'/transient-inspector.js', ['jquery'], time(), true);
 			wp_enqueue_style(PLUGIN_SLUG.'-transient-inspector', URL_STYLES.'/transient-inspector.css', [], time());
 
 			wp_localize_script(PLUGIN_SLUG.'-transient-inspector', 'plugin_slug', PLUGIN_SLUG);
@@ -343,8 +343,8 @@ class TransientInspector {
 				esc_html__('%sLast checked%s: %s at %s', 'codepotent-update-manager'),
 				'<strong>',
 				'</strong>',
-				date('F j, Y', $timestamp),
-				date('h:i:s a', $timestamp)
+				gmdate('F j, Y', $timestamp),
+				gmdate('h:i:s a', $timestamp)
 				);
 
 		// Container.

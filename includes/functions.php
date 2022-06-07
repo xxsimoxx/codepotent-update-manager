@@ -906,7 +906,7 @@ function strip_tags_deep($value) {
 	}
 
 	// At last, a string! Strip the tags.
-	return strip_tags($value);
+	return wp_strip_all_tags($value);
 
 }
 
@@ -1171,7 +1171,7 @@ function markup_testing_notice($targets, $identifier, $header) {
 			$header['version']);
 		$lines = [];
 		$lines[] = sprintf(
-			esc_html__('We greatly appreciate your help and feedback in testing the update to %s version %s — thanks!'),
+			esc_html__('We greatly appreciate your help and feedback in testing the update to %s version %s — thanks!', 'codepotent-update-manager'),
 			$header['name'],
 			$header['version'])."\r\n\r\n";
 		$body = implode('', $lines);

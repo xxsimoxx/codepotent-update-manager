@@ -658,8 +658,8 @@ class PluginEndpoint {
 			$test_urls = get_allowed_test_urls($post_id);
 			if (!empty($test_urls[0])) {
 				foreach ($test_urls as $test_url) {
-					$truncated_url = (strlen($test_url)<=30) ? $test_url : substr($test_url, 0, 27).'...';
-					echo '<a href="'.$test_url.'" title="'.$test_url.'">'.$truncated_url.'</a><br>';
+					$truncated_url = (strlen($test_url)<=30) ? esc_url_raw($test_url) : substr(esc_url_raw($test_url), 0, 27).'...';
+					echo '<a href="'.esc_url_raw($test_url).'" title="'.esc_url_raw($test_url).'">'.$truncated_url.'</a><br>';
 				}
 			} else {
 				echo '&#8211;';

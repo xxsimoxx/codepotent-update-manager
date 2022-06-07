@@ -2,15 +2,18 @@
 
 Description:       Painlessly push updates to your ClassicPress plugin and theme users! Serve updates from GitHub, your own site, or somewhere in the cloud. 100% integrated with the ClassicPress update process; slim and performant.
 Version:           2.4.3
+Tags:              update, updater, plugin, theme
 Text Domain:       codepotent-update-manager
 Domain Path:       /languages
 Requires PHP:      5.6
 Requires:          1.0.0
 Tested:            4.9.99
+Requires up to:    1.0.0
+Tested up to:      4.9.99
 Author:            Simone Fioravanti
 Author URI:        https://software.gieffeedizioni.it
 Plugin URI:        https://software.gieffeedizioni.it
-Download link:     https://github.com/xxsimoxx/codepotent-update-manager/releases/download/2.4.2/codepotent-update-manager-2.4.2.zip
+Download link:     https://github.com/xxsimoxx/codepotent-update-manager/releases/download/2.4.3/codepotent-update-manager-2.4.3.zip
 License:           GPLv2
 License URI:       https://www.gnu.org/licenses/gpl-2.0.html
 
