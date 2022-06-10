@@ -637,11 +637,11 @@ class PluginEndpoint {
 			$style = 'opacity:.3;';
 			$title = esc_html__('No Download Available', 'codepotent-update-manager');
 			if (!empty($header['download_link'])) {
-				echo '<a href="'.$header['download_link'].'">';
+				echo '<a href="'.esc_url($header['download_link']).'">';
 				$style = '';
 				$title = esc_html__('Download', 'codepotent-update-manager');
 			}
-			echo '<span style="'.$style.'" title="'.$title.'" class="dashicons dashicons-download"></span>';
+			echo '<span style="'.esc_html($style).'" title="'.esc_html($title).'" class="dashicons dashicons-download"></span>';
 			if (!empty($header['download_link'])) {
 				echo '</a>';
 			}
@@ -657,7 +657,7 @@ class PluginEndpoint {
 			$test_urls = get_allowed_test_urls($post_id);
 			if (!empty($test_urls[0])) {
 				foreach ($test_urls as $test_url) {
-					$truncated_url = (strlen($test_url)<=30) ? esc_url_raw($test_url) : substr(esc_url_raw($test_url), 0, 27).'...';
+					$truncated_url = (strlen($test_url)<=30) ? $test_url : substr($test_url, 0, 27).'...';
 					echo '<a href="'.esc_url_raw($test_url).'" title="'.esc_url_raw($test_url).'">'.esc_url_raw($truncated_url).'</a><br>';
 				}
 			} else {
@@ -693,7 +693,7 @@ class PluginEndpoint {
 				foreach ($targets['url'] as $test_url) {
 					$truncated_url = (strlen($test_url)<=20) ? $test_url : substr($test_url, 0, 17).'...';
 					echo '<span class="dashicons dashicons-admin-site"></span> ';
-					echo '<a href="'.$test_url.'">'.$truncated_url.'</a>';
+					echo '<a href="'.esc_url_raw($test_url).'">'.esc_url_raw($truncated_url).'</a>';
 				}
 			}
 		}
@@ -702,7 +702,7 @@ class PluginEndpoint {
 		if ($column === 'modified') {
 			$timedate_parts = explode(' ', $post->post_modified);
 			$date_parts = explode('-', $timedate_parts[0]);
-			echo $date_parts[0].'/'.$date_parts[1].'/'.$date_parts[2];
+			echo esc_html($date_parts[0].'/'.$date_parts[1].'/'.$date_parts[2]);
 		}
 
 	}

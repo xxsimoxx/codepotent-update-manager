@@ -384,7 +384,7 @@ class ThemeEndpoint {
 			$_POST[PLUGIN_PREFIX.'_editor'] = str_replace(['<?','? >'], ['&lt;?','?&gt;',], wp_unslash($_POST[PLUGIN_PREFIX.'_editor'])); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 		}
 
-		// Strip slashes from input.
+		// Strip slashes from input. strip_tags_deep uses wp_strip_all_tags so it is sanitized.
 		$request = strip_tags_deep(stripslashes_deep($_POST));
 
 		// No expected data submitted? Bail.
@@ -637,11 +637,11 @@ class ThemeEndpoint {
 			$style = 'opacity:.3;';
 			$title = esc_html__('No Download Available', 'codepotent-update-manager');
 			if (!empty($header['download_link'])) {
-				echo '<a href="'.$header['download_link'].'">';
+				echo '<a href="'.esc_url($header['download_link']).'">';
 				$style = '';
 				$title = esc_html__('Download', 'codepotent-update-manager');
 			}
-			echo '<span style="'.$style.'" title="'.$title.'" class="dashicons dashicons-download"></span>';
+			echo '<span style="'.esc_html($style).'" title="'.esc_html($title).'" class="dashicons dashicons-download"></span>';
 			if (!empty($header['download_link'])) {
 				echo '</a>';
 			}
@@ -657,7 +657,7 @@ class ThemeEndpoint {
 			$test_urls = get_allowed_test_urls($post_id);
 			if (!empty($test_urls[0])) {
 				foreach ($test_urls as $test_url) {
-					$truncated_url = (strlen($test_url)<=30) ? esc_url_raw($test_url) : substr(esc_url_raw($test_url), 0, 27).'...';
+					$truncated_url = (strlen($test_url)<=30) ? $test_url : substr($test_url, 0, 27).'...';
 					echo '<a href="'.esc_url_raw($test_url).'" title="'.esc_url_raw($test_url).'">'.esc_url_raw($truncated_url).'</a><br>';
 				}
 			} else {
@@ -693,7 +693,7 @@ class ThemeEndpoint {
 				foreach ($targets['url'] as $test_url) {
 					$truncated_url = (strlen($test_url)<=20) ? $test_url : substr($test_url, 0, 17).'...';
 					echo '<span class="dashicons dashicons-admin-site"></span> ';
-					echo '<a href="'.$test_url.'">'.$truncated_url.'</a>';
+					echo '<a href="'.esc_url_raw($test_url).'">'.esc_url_raw($truncated_url).'</a>';
 				}
 			}
 		}
@@ -702,7 +702,7 @@ class ThemeEndpoint {
 		if ($column === 'modified') {
 			$timedate_parts = explode(' ', $post->post_modified);
 			$date_parts = explode('-', $timedate_parts[0]);
-			echo $date_parts[0].'/'.$date_parts[1].'/'.$date_parts[2];
+			echo esc_html($date_parts[0].'/'.$date_parts[1].'/'.$date_parts[2]);
 		}
 
 	}
