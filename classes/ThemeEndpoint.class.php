@@ -374,28 +374,18 @@ class ThemeEndpoint {
 	 */
 	public function update_meta_box_primary($post_id, $post) {
 
-		// Replace PHP tags prior to stripping data; prevents data corruption.
+		// No nonce present? Bail.
+		if (!isset($_REQUEST[PLUGIN_PREFIX.'_metabox_nonce']) || !wp_verify_nonce(sanitize_key(wp_unslash($_REQUEST[PLUGIN_PREFIX.'_metabox_nonce'])), PLUGIN_PREFIX.'_metabox_nonce')) {
+			return $post_id;
+		}
+
+		// Remove any PHP tags prior to stripping data to prevent corruption. 
 		if (!empty($_POST[PLUGIN_PREFIX.'_editor'])) {
-			$_POST[PLUGIN_PREFIX.'_editor'] = str_replace(['<?','? >'], ['&lt;?','?&gt;',], $_POST[PLUGIN_PREFIX.'_editor']);
+			$_POST[PLUGIN_PREFIX.'_editor'] = str_replace(['<?','? >'], ['&lt;?','?&gt;',], wp_unslash($_POST[PLUGIN_PREFIX.'_editor'])); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 		}
 
 		// Strip slashes from input.
 		$request = strip_tags_deep(stripslashes_deep($_POST));
-
-		// No nonce present? Bail.
-		if (empty($request[PLUGIN_PREFIX.'_metabox_nonce'])) {
-			return $post_id;
-		}
-
-		// Nonce is suspect? Bail.
-		if (!wp_verify_nonce($request[PLUGIN_PREFIX.'_metabox_nonce'], PLUGIN_PREFIX.'_metabox_nonce')) {
-			return $post_id;
-		}
-
-		// No expected data submitted? Bail.
-		if (empty($request[PLUGIN_PREFIX.'_theme_id']) || ! wp_verify_nonce($request[PLUGIN_PREFIX.'_metabox_nonce'], PLUGIN_PREFIX.'_metabox_nonce')) {
-			return $post_id;
-		}
 
 		// Doing autosave? Bail.
 		if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
