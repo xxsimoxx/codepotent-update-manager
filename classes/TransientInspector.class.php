@@ -24,6 +24,12 @@ if (!defined('ABSPATH')) {
 	die();
 }
 
+/*
+This class is used by programmers to test updates in real time.
+The only function that needs a nonce is purge_transients() as this deletes 
+transient, so habe to be secure. And the function itself verifies the transient.
+*/
+
 class TransientInspector {
 
 	/**
@@ -144,6 +150,15 @@ class TransientInspector {
 
 	}
 
+	/*
+	Not checking nonces here as we are not modifying anything.
+	Just if the action is "purge" we modify transient.
+	Doing that in purge_transients() function that check for nonce
+	before deleting transients
+	*/
+	
+	// phpcs:disable WordPress.Security.NonceVerification.Recommended
+
 	/**
 	 * Set action
 	 *
@@ -156,7 +171,6 @@ class TransientInspector {
 	 * @return void
 	 */
 	public function set_action() {
-
 		// Default action.
 		$this->action = 'show';
 
@@ -186,12 +200,14 @@ class TransientInspector {
 		// If requested component is whitelisted, reset it locally.
 		if (!empty($_REQUEST['component'])) {
 			if (in_array($_REQUEST['component'], $this->components, true)) {
-				$this->component = $_REQUEST['component'];
+				$this->component = sanitize_text_field(wp_unslash($_REQUEST['component']));
 			}
 		}
 
 
 	}
+
+	// phpcs:enable
 
 	/**
 	 * Set user permissions
@@ -226,13 +242,13 @@ class TransientInspector {
 	public function render_transient_inspector() {
 
 		// ClassicPress 101: use the standard wrap class on the output.
-		echo '<div id="'.PLUGIN_SLUG.'-container" class="wrap">';
+		echo '<div id="'.esc_html(PLUGIN_SLUG).'-container" class="wrap">';
 
 		// Main title.
 		echo '<h1>';
 		echo sprintf(
 			esc_html__('%s &#8211; Transient Inspector', 'codepotent-update-manager'),
-			PLUGIN_NAME);
+			esc_html(PLUGIN_NAME));
 		echo '</h1>';
 
 		// If no permission to view this data, bail.
@@ -240,7 +256,7 @@ class TransientInspector {
 			echo '<p>';
 			echo esc_html__('You do not have sufficient permission to access this data.', 'codepotent-update-manager');
 			echo '</p>';
-			echo '</div><!--  #'.PLUGIN_SLUG.'-container.wrap -->';
+			echo '</div><!--  #'.esc_html(PLUGIN_SLUG).'-container.wrap -->';
 			return;
 		}
 
@@ -259,14 +275,14 @@ class TransientInspector {
 			$themes = get_site_transient('update_themes');
 		}
 
-		// Transients menu.
-		echo $this->markup_transients_menu();
+		// Transients menu. This output a lot of markup, so it's not escaped.
+		echo $this->markup_transients_menu(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 
-		// Dump transients.
-		echo $this->markup_transient_datadump($plugins, $themes);
+		// Dump transients. This output a lot of markup, so it's not escaped.
+		echo $this->markup_transient_datadump($plugins, $themes); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 
 		// Container.
-		echo '</div><!--  #'.PLUGIN_SLUG.'-container.wrap -->';
+		echo '</div><!--  #'.esc_html(PLUGIN_SLUG).'-container.wrap -->';
 
 	}
 
@@ -289,9 +305,13 @@ class TransientInspector {
 		// Container.
 		$markup = '<h2 class="nav-tab-wrapper">';
 
+		if(!isset($_SERVER['QUERY_STRING'])) {
+			$_SERVER['QUERY_STRING'] = '';
+		}
+
 		// Plugin Update Data tab.
 		if ($this->is_plugin_manager) {
-			$current = (strstr($_SERVER['QUERY_STRING'], 'action=show&component=plugin')) ? ' nav-tab-active' : '';
+			$current = (strstr($_SERVER['QUERY_STRING'], 'action=show&component=plugin')) ? ' nav-tab-active' : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.MissingUnslash,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 			$markup .= '<a class="nav-tab'.$current.'" href="'.admin_url($url_base.'&action=show&component=plugin').'">';
 			$markup .= esc_html__('Plugin Update Data', 'codepotent-update-manager');
 			$markup .= '</a>';
@@ -299,7 +319,7 @@ class TransientInspector {
 
 		// Theme Update Data tab.
 		if ($this->is_theme_manager) {
-			$current = (strstr($_SERVER['QUERY_STRING'], 'action=show&component=theme')) ? ' nav-tab-active' : '';
+			$current = (strstr($_SERVER['QUERY_STRING'], 'action=show&component=theme')) ? ' nav-tab-active' : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.MissingUnslash,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 			$markup .= '<a class="nav-tab'.$current.'" href="'.admin_url($url_base.'&action=show&component=theme').'">';
 			$markup .= esc_html__('Theme Update Data', 'codepotent-update-manager');
 			$markup .= '</a>';
@@ -308,7 +328,7 @@ class TransientInspector {
 		// Update Details tab.
 		$current = ($_SERVER['QUERY_STRING'] === 'page='.PLUGIN_SHORT_SLUG.'-transient-inspector') ? ' nav-tab-active' : '';
 		if (!$current) {
-			$current = (strstr($_SERVER['QUERY_STRING'], 'page='.PLUGIN_SHORT_SLUG.'-transient-inspector&action=show&component=all')) ? 'current' : '';
+			$current = (strstr($_SERVER['QUERY_STRING'], 'page='.esc_html(PLUGIN_SHORT_SLUG).'-transient-inspector&action=show&component=all')) ? 'current' : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.MissingUnslash,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 		}
 		$markup .= '<a class="nav-tab'.$current.'" href="'.admin_url($url_base).'">';
 		$markup .= esc_html__('Update Details', 'codepotent-update-manager');
@@ -371,6 +391,10 @@ class TransientInspector {
 	 */
 	private function markup_deletion_links($plugins, $themes) {
 
+		if(!isset($_SERVER['QUERY_STRING'])) {
+			$_SERVER['QUERY_STRING'] = '';
+		}
+
 		// URL base for queries.
 		$url_base = '/admin.php?page='.PLUGIN_SHORT_SLUG.'-transient-inspector';
 
@@ -382,7 +406,7 @@ class TransientInspector {
 
 		// Link to delete plugin update tranient.
 		if ($this->is_plugin_manager) {
-			$current = (strstr($_SERVER['QUERY_STRING'], 'action=purge&component=plugin')) ? 'current' : '';
+			$current = (strstr($_SERVER['QUERY_STRING'], 'action=purge&component=plugin')) ? 'current' : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.MissingUnslash,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 			$markup .= '<a class="'.$current.'" href="'.admin_url($url_base.'&action=purge&component=plugin&_wpnonce='.$this->nonce).'">';
 			$markup .= esc_html__('Plugins', 'codepotent-update-manager');
 			$markup .= '</a>';
@@ -391,7 +415,7 @@ class TransientInspector {
 
 		// Link to delete theme update tranient.
 		if ($this->is_theme_manager) {
-			$current = (strstr($_SERVER['QUERY_STRING'], 'action=purge&component=theme')) ? 'current' : '';
+			$current = (strstr($_SERVER['QUERY_STRING'], 'action=purge&component=theme')) ? 'current' : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.MissingUnslash,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 			$markup .= '<a class="'.$current.'" href="'.admin_url($url_base.'&action=purge&component=theme&_wpnonce='.$this->nonce).'">';
 			$markup .= esc_html__('Themes', 'codepotent-update-manager');
 			$markup .= '</a>';
@@ -400,7 +424,7 @@ class TransientInspector {
 
 		// Link to delete both plugin and theme update tranient.
 		if ($this->is_plugin_manager && $this->is_theme_manager) {
-			$current = (strstr($_SERVER['QUERY_STRING'], 'action=purge&component=all')) ? 'current' : '';
+			$current = (strstr($_SERVER['QUERY_STRING'], 'action=purge&component=all')) ? 'current' : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.MissingUnslash,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 			$markup .= '<a class="'.$current.'" href="'.admin_url($url_base.'&action=purge&component=all&_wpnonce='.$this->nonce).'">';
 			$markup .= esc_html__('Both', 'codepotent-update-manager');
 			$markup .= '</a>';
@@ -869,9 +893,9 @@ class TransientInspector {
 	 * @return string HTML markup.
 	 */
 	private function debug_transients($var) {
-
+		// This class is for debug, so print_r() is fine
 		$markup = '<pre class="'.PLUGIN_SLUG.'-debug-panel">';
-		$markup .= print_r($var->response, true);
+		$markup .= print_r($var->response, true); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_print_r
 		$markup .= '</pre>';
 		return $markup;
 
@@ -921,7 +945,8 @@ class TransientInspector {
 
 		// Display admin notice.
 		if ($plugins_purged || $themes_purged) {
-			echo $this->markup_admin_notice($plugins_purged, $themes_purged);
+			// This function display a lot of markup.
+			echo $this->markup_admin_notice($plugins_purged, $themes_purged); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 		}
 
 	}
