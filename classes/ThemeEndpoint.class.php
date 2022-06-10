@@ -387,6 +387,11 @@ class ThemeEndpoint {
 		// Strip slashes from input.
 		$request = strip_tags_deep(stripslashes_deep($_POST));
 
+		// No expected data submitted? Bail.
+		if (empty($request[PLUGIN_PREFIX.'_theme_id'])) {
+			return $post_id;
+		}
+
 		// Doing autosave? Bail.
 		if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
 			return $post_id;

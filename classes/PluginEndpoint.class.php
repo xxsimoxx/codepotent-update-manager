@@ -388,7 +388,7 @@ class PluginEndpoint {
 		$request = strip_tags_deep(stripslashes_deep($_POST));
 
 		// No expected data submitted? Bail.
-		if (empty($request[PLUGIN_PREFIX.'_plugin_id']) || ! wp_verify_nonce($request[PLUGIN_PREFIX.'_metabox_nonce'], PLUGIN_PREFIX.'_metabox_nonce')) {
+		if (empty($request[PLUGIN_PREFIX.'_plugin_id'])) {
 			return $post_id;
 		}
 
