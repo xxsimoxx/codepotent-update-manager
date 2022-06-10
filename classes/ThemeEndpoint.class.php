@@ -270,10 +270,10 @@ class ThemeEndpoint {
 
 		// Identifier.
 		echo '		<tr>'."\n";
-		echo '			<th scope="row"><label for="'.PLUGIN_SLUG.'-identifier">'.esc_html__('Endpoint Identifier', 'codepotent-update-manager').'</label></th>'."\n";
+		echo '			<th scope="row"><label for="'.esc_html(PLUGIN_SLUG).'-identifier">'.esc_html__('Endpoint Identifier', 'codepotent-update-manager').'</label></th>'."\n";
 		echo '			<td>'."\n";
 		echo '				<p>'."\n";
-		echo '					<input class="widefat" name="'.PLUGIN_PREFIX.'_theme_id" type="text" id="'.PLUGIN_SLUG.'-identifier" value="'.esc_attr($identifier).'" placeholder="'.esc_attr('theme-folder-name').'">'."\n";
+		echo '					<input class="widefat" name="'.esc_html(PLUGIN_PREFIX).'_theme_id" type="text" id="'.esc_html(PLUGIN_SLUG).'-identifier" value="'.esc_attr($identifier).'" placeholder="'.esc_attr('theme-folder-name').'">'."\n";
 		echo '				</p>'."\n";
 		echo '				<p class="description">';
 		echo sprintf(
@@ -286,10 +286,10 @@ class ThemeEndpoint {
 
 		// Text editor.
 		echo '		<tr>'."\n";
-		echo '			<th scope="row"><label for="'.PLUGIN_SLUG.'-editor">'.esc_html__('Theme Details', 'codepotent-update-manager').'</label></th>'."\n";
+		echo '			<th scope="row"><label for="'.esc_html(PLUGIN_SLUG).'-editor">'.esc_html__('Theme Details', 'codepotent-update-manager').'</label></th>'."\n";
 		echo '			<td>'."\n";
 		echo '				<p>';
-		echo '					<textarea class="widefat" rows="20" name="'.PLUGIN_PREFIX.'_editor" id="'.PLUGIN_SLUG.'-editor">'.esc_textarea($content).'</textarea>';
+		echo '					<textarea class="widefat" rows="20" name="'.esc_html(PLUGIN_PREFIX).'_editor" id="'.esc_html(PLUGIN_SLUG).'-editor">'.esc_textarea($content).'</textarea>';
 		echo '				</p>'."\n";
 		echo '				<p class="description">';
 		echo sprintf(
@@ -305,10 +305,10 @@ class ThemeEndpoint {
 
 		// Testable URLs.
 		echo '		<tr>'."\n";
-		echo '			<th scope="row"><label for="'.PLUGIN_SLUG.'-test-urls">'.esc_html__('Testing Domains', 'codepotent-update-manager').'</label></th>'."\n";
+		echo '			<th scope="row"><label for="'.esc_html(PLUGIN_SLUG).'-test-urls">'.esc_html__('Testing Domains', 'codepotent-update-manager').'</label></th>'."\n";
 		echo '			<td>'."\n";
 		echo '				<p>';
-		echo '					<textarea class="widefat" rows="5" name="'.PLUGIN_PREFIX.'_test_urls" id="'.PLUGIN_SLUG.'-test-urls">'.esc_textarea($test_urls).'</textarea>';
+		echo '					<textarea class="widefat" rows="5" name="'.esc_html(PLUGIN_PREFIX).'_test_urls" id="'.esc_html(PLUGIN_SLUG).'-test-urls">'.esc_textarea($test_urls).'</textarea>';
 		echo '				</p>'."\n";
 		echo '				<p class="description">';
 		echo sprintf(
@@ -326,10 +326,10 @@ class ThemeEndpoint {
 
 		// Notifications.
 		echo '		<tr>'."\n";
-		echo '			<th scope="row"><label for="'.PLUGIN_SLUG.'-notifications">'.esc_html__('Notifications', 'codepotent-update-manager').'</label></th>'."\n";
+		echo '			<th scope="row"><label for="'.esc_html(PLUGIN_SLUG).'-notifications">'.esc_html__('Notifications', 'codepotent-update-manager').'</label></th>'."\n";
 		echo '			<td>'."\n";
 		echo '				<p>'."\n";
-		echo '					<input class="widefat" name="'.PLUGIN_PREFIX.'_notifications" type="text" id="'.PLUGIN_SLUG.'-notifications" value="'.esc_attr($notifications).'" placeholder="'.esc_attr('Ex: sue@mail.com, joe@mail.com, https://site.com/contact').'">'."\n";
+		echo '					<input class="widefat" name="'.esc_html(PLUGIN_PREFIX).'_notifications" type="text" id="'.esc_html(PLUGIN_SLUG).'-notifications" value="'.esc_attr($notifications).'" placeholder="'.esc_attr('Ex: sue@mail.com, joe@mail.com, https://site.com/contact').'">'."\n";
 		echo '				</p>'."\n";
 		echo '				<p class="description">';
 		echo sprintf(
@@ -342,8 +342,12 @@ class ThemeEndpoint {
 
 		// Cheat sheet.
 		echo '		<tr style="border-top:1px solid #ccc;">';
-		echo '			<th scope="row"><label><a href="#" id="'.PLUGIN_SLUG.'-toggle-cheat-sheet">'.esc_html__('Need a cheat sheet?', 'codepotent-update-manager').'</a></label></th>'."\n";
-		echo '			<td>'.markup_header_data_legend('theme').'</td>';
+		echo '			<th scope="row"><label><a href="#" id="'.esc_html(PLUGIN_SLUG).'-toggle-cheat-sheet">'.esc_html__('Need a cheat sheet?', 'codepotent-update-manager').'</a></label></th>'."\n";
+		/*
+		markup_header_data_legend output a cheatsheet that contains a lot of hardcoded HTML, that is already escaped
+		in the function when needed, so wp_kses is unuseful here. 
+		*/
+		echo '			<td>'.markup_header_data_legend('theme').'</td>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 		echo '		</tr>';
 
 		// Close table.
