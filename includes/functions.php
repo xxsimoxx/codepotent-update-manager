@@ -34,12 +34,20 @@ if (!defined('ABSPATH')) {
  * @return array|string
  */
 function get_request() {
+	/*
+	This is used by component_information function in this file.
+	component_information function is used in 2 endpoints:
+	endpoints/plugin_information.php
+	endpoints/theme_information.php
+	The request is coming from the outside (sites getting information about a plugin or theme)
+	so can't verify any nonce but just want to sanitize data passed.
+	*/
 
 	// Strip slashes, then tags from request data.
-	$request = strip_tags_deep(stripslashes_deep($_REQUEST));
+	$request = strip_tags_deep(stripslashes_deep($_REQUEST)); //phpcs:ignore WordPress.Security.NonceVerification.Recommended
 
 	// Ensure the raw data can't be used elsewhere.
-	unset($_REQUEST);
+	unset($_REQUEST); //phpcs:ignore WordPress.Security.NonceVerification.Recommended
 
 	// Endpoint variable not set? Bail.
 	if (empty($request[ENDPOINT_VARIABLE])) {
@@ -54,22 +62,9 @@ function get_request() {
 	// Type of update being checked for.
 	$type = (!empty($request['plugin'])) ? 'plugin' : 'theme';
 
-	// No requesting URL submitted (ie, RC1)? Get it from user agent instead.
+	// No requesting URL submitted? Bail.
 	if (empty($request['site_url'])) {
-		// User agent messed with? Bail.
-		if (empty($_SERVER['HTTP_USER_AGENT'])) {
-			return [];
-		}
-		// Split the user agent parts.
-		$user_agent_parts = explode(';', $_SERVER['HTTP_USER_AGENT']);
-		// Extract url from string: ClassicPress/x.x.x; https://www.the-site.com
-		$site_url = trim(array_pop($user_agent_parts));
-		// Still no URL? Bail.
-		if (empty($site_url) || !filter_var($site_url, FILTER_VALIDATE_URL)) {
-			return [];
-		}
-		// Alrighty, then! Got a URL, clean it up.
-		$request['site_url'] = esc_url($site_url);
+		return [];
 	}
 
 	// Add a nonce.
@@ -906,7 +901,7 @@ function strip_tags_deep($value) {
 	}
 
 	// At last, a string! Strip the tags.
-	return strip_tags($value);
+	return wp_strip_all_tags($value);
 
 }
 
@@ -1171,7 +1166,7 @@ function markup_testing_notice($targets, $identifier, $header) {
 			$header['version']);
 		$lines = [];
 		$lines[] = sprintf(
-			esc_html__('We greatly appreciate your help and feedback in testing the update to %s version %s — thanks!'),
+			esc_html__('We greatly appreciate your help and feedback in testing the update to %s version %s — thanks!', 'codepotent-update-manager'),
 			$header['name'],
 			$header['version'])."\r\n\r\n";
 		$body = implode('', $lines);
@@ -1437,7 +1432,7 @@ function markup_header_data_legend($component) {
 	}
 
 	// Container.
-	$markup = '<div id="'.PLUGIN_SLUG.'-cheat-sheet">';
+	$markup = '<div id="'.esc_html(PLUGIN_SLUG).'-cheat-sheet">';
 
 	// Heading.
 	$markup .= '<h3>'.esc_html__('Header Properties Cheat Sheet', 'codepotent-update-manager').'</h3>';
@@ -1462,7 +1457,7 @@ function markup_header_data_legend($component) {
 
 	// Description.
 	$markup .= '<p>';
-	$markup .= '<code class="'.PLUGIN_SLUG.'-property-name">'.esc_html__('Description', 'codepotent-update-manager').'</code> ';
+	$markup .= '<code class="'.esc_html(PLUGIN_SLUG).'-property-name">'.esc_html__('Description', 'codepotent-update-manager').'</code> ';
 	$markup .= '<em class="optional">'.esc_html__('Optional', 'codepotent-update-manager').'</em><br>';
 	$markup .= sprintf(
 			esc_html__('A succinct description or overview of the %1$s. This text can span more than a single line in the editor, but, must not contain any line breaks or carriage returns. Used in %1$s update admin rows.', 'codepotent-update-manager'),
@@ -1471,7 +1466,7 @@ function markup_header_data_legend($component) {
 
 	// Version.
 	$markup .= '<p>';
-	$markup .= '<code class="'.PLUGIN_SLUG.'-property-name">'.esc_html__('Version', 'codepotent-update-manager').'</code> ';
+	$markup .= '<code class="'.esc_html(PLUGIN_SLUG).'-property-name">'.esc_html__('Version', 'codepotent-update-manager').'</code> ';
 	$markup .= '<em class="required">'.esc_html__('Required', 'codepotent-update-manager').'</em><br>';
 	$markup .= sprintf(
 			esc_html__('The latest version number for the %s. Semantic versions are supported, for example, %s.', 'codepotent-update-manager'),
@@ -1481,7 +1476,7 @@ function markup_header_data_legend($component) {
 
 	// Text domain.
 	$markup .= '<p>';
-	$markup .= '<code class="'.PLUGIN_SLUG.'-property-name">'.esc_html__('Text Domain', 'codepotent-update-manager').'</code> ';
+	$markup .= '<code class="'.esc_html(PLUGIN_SLUG).'-property-name">'.esc_html__('Text Domain', 'codepotent-update-manager').'</code> ';
 	$markup .= '<em class="optional">'.esc_html__('Optional', 'codepotent-update-manager').'</em><br>';
 	$markup .= sprintf(
 			esc_html__('The text domain used in your translated texts; often simply the %s own directory name, for example, %s.', 'codepotent-update-manager'),
@@ -1491,7 +1486,7 @@ function markup_header_data_legend($component) {
 
 	// Domain path.
 	$markup .= '<p>';
-	$markup .= '<code class="'.PLUGIN_SLUG.'-property-name">'.esc_html__('Domain Path', 'codepotent-update-manager').'</code> ';
+	$markup .= '<code class="'.esc_html(PLUGIN_SLUG).'-property-name">'.esc_html__('Domain Path', 'codepotent-update-manager').'</code> ';
 	$markup .= '<em class="optional">'.esc_html__('Optional', 'codepotent-update-manager').'</em><br>';
 	$markup .= sprintf(
 			esc_html__('The path to the directory that holds your translation files, relative to the text domain directory, often %s.', 'codepotent-update-manager'),
@@ -1500,7 +1495,7 @@ function markup_header_data_legend($component) {
 
 	// Requires PHP.
 	$markup .= '<p>';
-	$markup .= '<code class="'.PLUGIN_SLUG.'-property-name">'.esc_html__('Requires PHP', 'codepotent-update-manager').'</code> ';
+	$markup .= '<code class="'.esc_html(PLUGIN_SLUG).'-property-name">'.esc_html__('Requires PHP', 'codepotent-update-manager').'</code> ';
 	$markup .= '<em class="optional">'.esc_html__('Optional', 'codepotent-update-manager').'</em><br>';
 	$markup .= sprintf(
 			esc_html__('The minimum version of PHP required by the %s, for example, %s, %s, or %s.', 'codepotent-update-manager'),
@@ -1513,7 +1508,7 @@ function markup_header_data_legend($component) {
 
 	// Minimum ClassicPress requirement.
 	$markup .= '<p>';
-	$markup .= '<code class="'.PLUGIN_SLUG.'-property-name">'.esc_html__('Requires', 'codepotent-update-manager').'</code> ';
+	$markup .= '<code class="'.esc_html(PLUGIN_SLUG).'-property-name">'.esc_html__('Requires', 'codepotent-update-manager').'</code> ';
 	$markup .= '<em class="required">'.esc_html__('Required', 'codepotent-update-manager').'</em><br>';
 	$markup .= sprintf(
 			esc_html__('The minimum version of ClassicPress required by the %s, for example, %s or %s.', 'codepotent-update-manager'),
@@ -1525,7 +1520,7 @@ function markup_header_data_legend($component) {
 
 	// Maximum ClassicPress requirement.
 	$markup .= '<p>';
-	$markup .= '<code class="'.PLUGIN_SLUG.'-property-name">'.esc_html__('Tested', 'codepotent-update-manager').'</code> ';
+	$markup .= '<code class="'.esc_html(PLUGIN_SLUG).'-property-name">'.esc_html__('Tested', 'codepotent-update-manager').'</code> ';
 	$markup .= '<em class="optional">'.esc_html__('Optional', 'codepotent-update-manager').'</em><br>';
 	$markup .= sprintf(
 			esc_html__('The maximum version of ClassicPress the %s has been tested with. You can set a specific ClassicPress version number here to indicate compatibility up to a certain version, or, you can set it to %s to indicate 100&#37; compatible.', 'codepotent-update-manager'),
@@ -1535,7 +1530,7 @@ function markup_header_data_legend($component) {
 
 	// Author name.
 	$markup .= '<p>';
-	$markup .= '<code class="'.PLUGIN_SLUG.'-property-name">'.esc_html__('Author', 'codepotent-update-manager').'</code> ';
+	$markup .= '<code class="'.esc_html(PLUGIN_SLUG).'-property-name">'.esc_html__('Author', 'codepotent-update-manager').'</code> ';
 	$markup .= '<em class="optional">'.esc_html__('Optional', 'codepotent-update-manager').'</em><br>';
 	$markup .= sprintf(
 			esc_html__('The author, developer, or agency name in plain text, for example %s.', 'codepotent-update-manager'),
@@ -1544,7 +1539,7 @@ function markup_header_data_legend($component) {
 
 	// Author URI.
 	$markup .= '<p>';
-	$markup .= '<code class="'.PLUGIN_SLUG.'-property-name">'.esc_html__('Author URI', 'codepotent-update-manager').'</code> ';
+	$markup .= '<code class="'.esc_html(PLUGIN_SLUG).'-property-name">'.esc_html__('Author URI', 'codepotent-update-manager').'</code> ';
 	$markup .= '<em class="optional">'.esc_html__('Optional', 'codepotent-update-manager').'</em><br>';
 	$markup .= sprintf(
 			esc_html__('A link to the author, developer, or agency website, for example, %s.', 'codepotent-update-manager'),
@@ -1554,9 +1549,9 @@ function markup_header_data_legend($component) {
 	// Component URI.
 	$markup .= '<p>';
 	if ($component === 'plugin') {
-		$markup .= '<code class="'.PLUGIN_SLUG.'-property-name">'.esc_html__('Plugin URI', 'codepotent-update-manager').'</code> ';
+		$markup .= '<code class="'.esc_html(PLUGIN_SLUG).'-property-name">'.esc_html__('Plugin URI', 'codepotent-update-manager').'</code> ';
 	} else {
-		$markup .= '<code class="'.PLUGIN_SLUG.'-property-name">'.esc_html__('Theme URI', 'codepotent-update-manager').'</code> ';
+		$markup .= '<code class="'.esc_html(PLUGIN_SLUG).'-property-name">'.esc_html__('Theme URI', 'codepotent-update-manager').'</code> ';
 	}
 	$markup .= '<em class="optional">'.esc_html__('Optional', 'codepotent-update-manager').'</em><br>';
 	$markup .= sprintf(
@@ -1567,7 +1562,7 @@ function markup_header_data_legend($component) {
 
 	// Download link.
 	$markup .= '<p>';
-	$markup .= '<code class="'.PLUGIN_SLUG.'-property-name">'.esc_html__('Download link', 'codepotent-update-manager').'</code> ';
+	$markup .= '<code class="'.esc_html(PLUGIN_SLUG).'-property-name">'.esc_html__('Download link', 'codepotent-update-manager').'</code> ';
 	$markup .= '<em class="required">'.esc_html__('Required', 'codepotent-update-manager').'</em><br>';
 	$markup .= sprintf(
 			esc_html__('A link to the zip file with the updated version of the %s, for example, %s.', 'codepotent-update-manager'),
@@ -1577,14 +1572,14 @@ function markup_header_data_legend($component) {
 
 	// Donate link.
 	$markup .= '<p>';
-	$markup .= '<code class="'.PLUGIN_SLUG.'-property-name">'.esc_html__('Donate link', 'codepotent-update-manager').'</code> ';
+	$markup .= '<code class="'.esc_html(PLUGIN_SLUG).'-property-name">'.esc_html__('Donate link', 'codepotent-update-manager').'</code> ';
 	$markup .= '<em class="optional">'.esc_html__('Optional', 'codepotent-update-manager').'</em><br>';
 	$markup .= esc_html__('A link to solicit donations for the effort. This link might be to a Patreon or PayPal account, or even just to a page on your own site.', 'codepotent-update-manager');
 	$markup .= '</p>';
 
 	// License type.
 	$markup .= '<p>';
-	$markup .= '<code class="'.PLUGIN_SLUG.'-property-name">'.esc_html__('License', 'codepotent-update-manager').'</code> ';
+	$markup .= '<code class="'.esc_html(PLUGIN_SLUG).'-property-name">'.esc_html__('License', 'codepotent-update-manager').'</code> ';
 	$markup .= '<em class="optional">'.esc_html__('Optional', 'codepotent-update-manager').'</em><br>';
 	$markup .= sprintf(
 			esc_html__('The license type under which the %s is released, for example, %s or %s.', 'codepotent-update-manager'),
@@ -1596,7 +1591,7 @@ function markup_header_data_legend($component) {
 
 	// License URI.
 	$markup .= '<p>';
-	$markup .= '<code class="'.PLUGIN_SLUG.'-property-name">'.esc_html__('License URI', 'codepotent-update-manager').'</code> ';
+	$markup .= '<code class="'.esc_html(PLUGIN_SLUG).'-property-name">'.esc_html__('License URI', 'codepotent-update-manager').'</code> ';
 	$markup .= '<em class="optional">'.esc_html__('Optional', 'codepotent-update-manager').'</em><br>';
 	$markup .= sprintf(
 			esc_html__('A link to the license applicable to the %s.', 'codepotent-update-manager'),

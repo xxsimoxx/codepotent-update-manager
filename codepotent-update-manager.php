@@ -4,12 +4,14 @@
  * -----------------------------------------------------------------------------
  * Plugin Name: Update Manager
  * Description: Painlessly push updates to your ClassicPress plugin users! Serve updates from GitHub, your own site, or somewhere in the cloud. 100% integrated with the ClassicPress update process; slim and performant.
- * Version: 2.4.2
+ * Version: 2.4.3
  * Author: Simone Fioravanti
  * Author URI: https://software.gieffeedizioni.it
  * Plugin URI: https://software.gieffeedizioni.it
  * Text Domain: codepotent-update-manager
  * Domain Path: /languages
+ * License: GPLv2
+ * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * -----------------------------------------------------------------------------
  * This is free software released under the terms of the General Public License,
  * version 2, or later. It is distributed WITHOUT ANY WARRANTY; without even the
@@ -90,18 +92,6 @@ class UpdateManager {
 
 		// Replace footer text with plugin name and version info.
 		add_filter('admin_footer_text', [$this, 'filter_footer_text'], PHP_INT_MAX);
-
-		// Plugin upgrade.
-		add_action('upgrader_process_complete', [$this, 'upgrade_plugin'], 10, 2);
-
-		// Convert post types after upgrade, if necessary.
-		add_action('registered_post_type', [$this, 'update_cpt_identifiers']);
-
-		// Plugin activation.
-		register_activation_hook(__FILE__, [$this, 'activate_plugin']);
-
-		// Plugin deactivation.
-		register_deactivation_hook(__FILE__, [$this, 'deactivate_plugin']);
 
 		// Plugin deletion.
 		register_uninstall_hook(__FILE__, [__CLASS__, 'uninstall_plugin']);
@@ -268,7 +258,7 @@ class UpdateManager {
 
 				// Enqueue assests.
 				wp_enqueue_style(PLUGIN_SLUG.'-post-edit-'.$component, URL_STYLES.'/post-edit.css', [], time());
-				wp_enqueue_script(PLUGIN_SLUG.'-post-edit-'.$component, URL_SCRIPTS.'/post-edit.js', ['jquery'], time());
+				wp_enqueue_script(PLUGIN_SLUG.'-post-edit-'.$component, URL_SCRIPTS.'/post-edit.js', ['jquery'], time(), true);
 
 				// Localize JS variables.
 				wp_localize_script(PLUGIN_SLUG.'-post-edit-'.$component, 'slug', PLUGIN_SLUG);
@@ -385,7 +375,7 @@ class UpdateManager {
 			// Contain the footer.
 			$text = '<span id="footer-thankyou" style="vertical-align:text-bottom;">';
 			// Code Potent info and link.
-			$text .= '<a href="'.PLUGIN_AUTHOR_URL.'/" title="'.PLUGIN_DESCRIPTION.'">'.PLUGIN_NAME.'</a> '.PLUGIN_VERSION.' &#8211; by <a href="'.PLUGIN_AUTHOR_URL.'" title="'.VENDOR_TAGLINE.'">'.PLUGIN_AUTHOR.'</a>';
+			$text .= '<a href="'.PLUGIN_AUTHOR_URL.'/" title="'.PLUGIN_DESCRIPTION.'">'.PLUGIN_NAME.'</a> '.PLUGIN_VERSION.' &#8211; by <a href="'.PLUGIN_AUTHOR_URL.'">'.PLUGIN_AUTHOR.'</a>';
 			// Allow extension authors to add their credit link to the footer.
 			if (!empty($GLOBALS['submenu'][PLUGIN_SHORT_SLUG])) {
 				foreach ($GLOBALS['submenu'][PLUGIN_SHORT_SLUG] as $item) {
@@ -409,106 +399,6 @@ class UpdateManager {
 
 		// Return the footer text.
 		return $text;
-
-	}
-
-	/**
-	 * Plugin activation.
-	 *
-	 * This method converts RC1 post types to RC2+ format to accommodate support
-	 * for theme updates.
-	 *
-	 * @author John Alarcon
-	 *
-	 * @since 1.0.0
-	 */
-	public function activate_plugin() {
-
-		// Bring database object into scope.
-		global $wpdb;
-
-		// Convert guids to new CPT identifier.
-		$wpdb->query("UPDATE $wpdb->posts SET guid = REPLACE(guid, 'plugin_repo', '".CPT_FOR_PLUGIN_ENDPOINTS."');");
-
-		// Convert old CPT identifiers to new CPT identifier.
-		$wpdb->query("UPDATE $wpdb->posts SET post_type = REPLACE(post_type, 'plugin_repo', '".CPT_FOR_PLUGIN_ENDPOINTS."');");
-
-	}
-
-	/**
-	 * Plugin deactivation.
-	 *
-	 * This method is included for completeness.
-	 *
-	 * @author John Alarcon
-	 *
-	 * @since 1.0.0
-	 */
-	public function deactivate_plugin() {
-
-		// Nothing to do here at this time.
-
-	}
-
-	/**
-	 * Plugin upgrade.
-	 *
-	 * This method sets a transient denoting that the plugin was just upgraded.
-	 *
-	 * @author John Alarcon
-	 *
-	 * @since 1.0.0
-	 *
-	 * @param object $upgrader_object The upgrader object.
-	 * @param array $args Arguments from the upgrade process.
-	 */
-	public function upgrade_plugin($upgrader_object, $args) {
-
-		// Not dealing with a plugin update? Bail.
-		if ($args['action'] !== 'update' || $args['type'] !== 'plugin') {
-			return;
-		}
-
-		// Ensure the needed argument exists, or bail.
-		if (empty($args['plugins']) || !is_array($args['plugins'])) {
-			return;
-		}
-
-		// The Update Manager plugin wasn't just updated? Bail.
-		if (!in_array(PLUGIN_IDENTIFIER, $args['plugins'], true)) {
-			return;
-		}
-
-		// Set a transient to flag that plugin was upgraded.
-		set_transient(PLUGIN_IDENTIFIER.'_upgraded', 1, 120);
-
-	}
-
-	/**
-	 * Update custom post types, if needed.
-	 *
-	 * This method deactivates and reactivates the plugin. This converts the RC1
-	 * post types to RC2.
-	 *
-	 * @author John Alarcon
-	 *
-	 * @since 1.0.0
-	 */
-	public function update_cpt_identifiers() {
-
-		// No transient indicating plugin was just updated? Bail.
-		if (!get_transient(PLUGIN_IDENTIFIER.'_upgraded')) {
-			return;
-		}
-
-		// Deactivate the plugin.
-		deactivate_plugins(PLUGIN_IDENTIFIER);
-
-		// Reactivate the plugin; this converts RC1 post types to RC2.
-		activate_plugins(PLUGIN_IDENTIFIER);
-
-		// All done; delete the transient.
-		delete_transient(PLUGIN_IDENTIFIER.'_upgraded');
 
 	}
 

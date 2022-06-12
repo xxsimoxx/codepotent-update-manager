@@ -270,10 +270,10 @@ class ThemeEndpoint {
 
 		// Identifier.
 		echo '		<tr>'."\n";
-		echo '			<th scope="row"><label for="'.PLUGIN_SLUG.'-identifier">'.esc_html__('Endpoint Identifier', 'codepotent-update-manager').'</label></th>'."\n";
+		echo '			<th scope="row"><label for="'.esc_html(PLUGIN_SLUG).'-identifier">'.esc_html__('Endpoint Identifier', 'codepotent-update-manager').'</label></th>'."\n";
 		echo '			<td>'."\n";
 		echo '				<p>'."\n";
-		echo '					<input class="widefat" name="'.PLUGIN_PREFIX.'_theme_id" type="text" id="'.PLUGIN_SLUG.'-identifier" value="'.esc_attr($identifier).'" placeholder="'.esc_attr('theme-folder-name').'">'."\n";
+		echo '					<input class="widefat" name="'.esc_html(PLUGIN_PREFIX).'_theme_id" type="text" id="'.esc_html(PLUGIN_SLUG).'-identifier" value="'.esc_attr($identifier).'" placeholder="'.esc_attr('theme-folder-name').'">'."\n";
 		echo '				</p>'."\n";
 		echo '				<p class="description">';
 		echo sprintf(
@@ -286,10 +286,10 @@ class ThemeEndpoint {
 
 		// Text editor.
 		echo '		<tr>'."\n";
-		echo '			<th scope="row"><label for="'.PLUGIN_SLUG.'-editor">'.esc_html__('Theme Details', 'codepotent-update-manager').'</label></th>'."\n";
+		echo '			<th scope="row"><label for="'.esc_html(PLUGIN_SLUG).'-editor">'.esc_html__('Theme Details', 'codepotent-update-manager').'</label></th>'."\n";
 		echo '			<td>'."\n";
 		echo '				<p>';
-		echo '					<textarea class="widefat" rows="20" name="'.PLUGIN_PREFIX.'_editor" id="'.PLUGIN_SLUG.'-editor">'.esc_textarea($content).'</textarea>';
+		echo '					<textarea class="widefat" rows="20" name="'.esc_html(PLUGIN_PREFIX).'_editor" id="'.esc_html(PLUGIN_SLUG).'-editor">'.esc_textarea($content).'</textarea>';
 		echo '				</p>'."\n";
 		echo '				<p class="description">';
 		echo sprintf(
@@ -305,10 +305,10 @@ class ThemeEndpoint {
 
 		// Testable URLs.
 		echo '		<tr>'."\n";
-		echo '			<th scope="row"><label for="'.PLUGIN_SLUG.'-test-urls">'.esc_html__('Testing Domains', 'codepotent-update-manager').'</label></th>'."\n";
+		echo '			<th scope="row"><label for="'.esc_html(PLUGIN_SLUG).'-test-urls">'.esc_html__('Testing Domains', 'codepotent-update-manager').'</label></th>'."\n";
 		echo '			<td>'."\n";
 		echo '				<p>';
-		echo '					<textarea class="widefat" rows="5" name="'.PLUGIN_PREFIX.'_test_urls" id="'.PLUGIN_SLUG.'-test-urls">'.esc_textarea($test_urls).'</textarea>';
+		echo '					<textarea class="widefat" rows="5" name="'.esc_html(PLUGIN_PREFIX).'_test_urls" id="'.esc_html(PLUGIN_SLUG).'-test-urls">'.esc_textarea($test_urls).'</textarea>';
 		echo '				</p>'."\n";
 		echo '				<p class="description">';
 		echo sprintf(
@@ -326,10 +326,10 @@ class ThemeEndpoint {
 
 		// Notifications.
 		echo '		<tr>'."\n";
-		echo '			<th scope="row"><label for="'.PLUGIN_SLUG.'-notifications">'.esc_html__('Notifications', 'codepotent-update-manager').'</label></th>'."\n";
+		echo '			<th scope="row"><label for="'.esc_html(PLUGIN_SLUG).'-notifications">'.esc_html__('Notifications', 'codepotent-update-manager').'</label></th>'."\n";
 		echo '			<td>'."\n";
 		echo '				<p>'."\n";
-		echo '					<input class="widefat" name="'.PLUGIN_PREFIX.'_notifications" type="text" id="'.PLUGIN_SLUG.'-notifications" value="'.esc_attr($notifications).'" placeholder="'.esc_attr('Ex: sue@mail.com, joe@mail.com, https://site.com/contact').'">'."\n";
+		echo '					<input class="widefat" name="'.esc_html(PLUGIN_PREFIX).'_notifications" type="text" id="'.esc_html(PLUGIN_SLUG).'-notifications" value="'.esc_attr($notifications).'" placeholder="'.esc_attr('Ex: sue@mail.com, joe@mail.com, https://site.com/contact').'">'."\n";
 		echo '				</p>'."\n";
 		echo '				<p class="description">';
 		echo sprintf(
@@ -342,8 +342,12 @@ class ThemeEndpoint {
 
 		// Cheat sheet.
 		echo '		<tr style="border-top:1px solid #ccc;">';
-		echo '			<th scope="row"><label><a href="#" id="'.PLUGIN_SLUG.'-toggle-cheat-sheet">'.esc_html__('Need a cheat sheet?', 'codepotent-update-manager').'</a></label></th>'."\n";
-		echo '			<td>'.markup_header_data_legend('theme').'</td>';
+		echo '			<th scope="row"><label><a href="#" id="'.esc_html(PLUGIN_SLUG).'-toggle-cheat-sheet">'.esc_html__('Need a cheat sheet?', 'codepotent-update-manager').'</a></label></th>'."\n";
+		/*
+		markup_header_data_legend output a cheatsheet that contains a lot of hardcoded HTML, that is already escaped
+		in the function when needed, so wp_kses is unuseful here. 
+		*/
+		echo '			<td>'.markup_header_data_legend('theme').'</td>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 		echo '		</tr>';
 
 		// Close table.
@@ -370,26 +374,21 @@ class ThemeEndpoint {
 	 */
 	public function update_meta_box_primary($post_id, $post) {
 
-		// Replace PHP tags prior to stripping data; prevents data corruption.
-		if (!empty($_POST[PLUGIN_PREFIX.'_editor'])) {
-			$_POST[PLUGIN_PREFIX.'_editor'] = str_replace(['<?','? >'], ['&lt;?','?&gt;',], $_POST[PLUGIN_PREFIX.'_editor']);
+		// No nonce present? Bail.
+		if (!isset($_REQUEST[PLUGIN_PREFIX.'_metabox_nonce']) || !wp_verify_nonce(sanitize_key(wp_unslash($_REQUEST[PLUGIN_PREFIX.'_metabox_nonce'])), PLUGIN_PREFIX.'_metabox_nonce')) {
+			return $post_id;
 		}
 
-		// Strip slashes from input.
+		// Remove any PHP tags prior to stripping data to prevent corruption. 
+		if (!empty($_POST[PLUGIN_PREFIX.'_editor'])) {
+			$_POST[PLUGIN_PREFIX.'_editor'] = str_replace(['<?','? >'], ['&lt;?','?&gt;',], wp_unslash($_POST[PLUGIN_PREFIX.'_editor'])); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+		}
+
+		// Strip slashes from input. strip_tags_deep uses wp_strip_all_tags so it is sanitized.
 		$request = strip_tags_deep(stripslashes_deep($_POST));
 
-		// No nonce present? Bail.
-		if (empty($request[PLUGIN_PREFIX.'_metabox_nonce'])) {
-			return $post_id;
-		}
-
-		// Nonce is suspect? Bail.
-		if (!wp_verify_nonce($request[PLUGIN_PREFIX.'_metabox_nonce'], PLUGIN_PREFIX.'_metabox_nonce')) {
-			return $post_id;
-		}
-
 		// No expected data submitted? Bail.
-		if (empty($request[PLUGIN_PREFIX.'_theme_id']) || ! wp_verify_nonce($request[PLUGIN_PREFIX.'_metabox_nonce'], PLUGIN_PREFIX.'_metabox_nonce')) {
+		if (empty($request[PLUGIN_PREFIX.'_theme_id'])) {
 			return $post_id;
 		}
 
@@ -638,11 +637,11 @@ class ThemeEndpoint {
 			$style = 'opacity:.3;';
 			$title = esc_html__('No Download Available', 'codepotent-update-manager');
 			if (!empty($header['download_link'])) {
-				echo '<a href="'.$header['download_link'].'">';
+				echo '<a href="'.esc_url($header['download_link']).'">';
 				$style = '';
 				$title = esc_html__('Download', 'codepotent-update-manager');
 			}
-			echo '<span style="'.$style.'" title="'.$title.'" class="dashicons dashicons-download"></span>';
+			echo '<span style="'.esc_html($style).'" title="'.esc_html($title).'" class="dashicons dashicons-download"></span>';
 			if (!empty($header['download_link'])) {
 				echo '</a>';
 			}
@@ -659,7 +658,7 @@ class ThemeEndpoint {
 			if (!empty($test_urls[0])) {
 				foreach ($test_urls as $test_url) {
 					$truncated_url = (strlen($test_url)<=30) ? $test_url : substr($test_url, 0, 27).'...';
-					echo '<a href="'.$test_url.'" title="'.$test_url.'">'.$truncated_url.'</a><br>';
+					echo '<a href="'.esc_url_raw($test_url).'" title="'.esc_url_raw($test_url).'">'.esc_url_raw($truncated_url).'</a><br>';
 				}
 			} else {
 				echo '&#8211;';
@@ -694,7 +693,7 @@ class ThemeEndpoint {
 				foreach ($targets['url'] as $test_url) {
 					$truncated_url = (strlen($test_url)<=20) ? $test_url : substr($test_url, 0, 17).'...';
 					echo '<span class="dashicons dashicons-admin-site"></span> ';
-					echo '<a href="'.$test_url.'">'.$truncated_url.'</a>';
+					echo '<a href="'.esc_url_raw($test_url).'">'.esc_url_raw($truncated_url).'</a>';
 				}
 			}
 		}
@@ -703,7 +702,7 @@ class ThemeEndpoint {
 		if ($column === 'modified') {
 			$timedate_parts = explode(' ', $post->post_modified);
 			$date_parts = explode('-', $timedate_parts[0]);
-			echo $date_parts[0].'/'.$date_parts[1].'/'.$date_parts[2];
+			echo esc_html($date_parts[0].'/'.$date_parts[1].'/'.$date_parts[2]);
 		}
 
 	}

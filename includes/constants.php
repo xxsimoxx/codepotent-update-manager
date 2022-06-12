@@ -33,8 +33,6 @@ require_once(ABSPATH.'wp-admin/includes/plugin.php');
 
 // Ex: codepotent
 const VENDOR_PREFIX = 'codepotent';
-// Ex: Our company is cool!
-define(__NAMESPACE__.'\VENDOR_TAGLINE', esc_html__('', 'codepotent-update-manager'));
 // Ex: plugin-folder-name
 const PLUGIN_SHORT_SLUG = 'update-manager';
 // Ex: dashicons-whatever
@@ -58,19 +56,19 @@ const PLUGIN_FILEPATH = WP_PLUGIN_DIR.'/'.PLUGIN_IDENTIFIER;
 // Ex: vendor_plugin_name_settings
 const PLUGIN_SETTINGS_VAR = PLUGIN_PREFIX.'_settings';
 // Get plugin data from header file.
-$plugin = get_plugin_data(PLUGIN_FILEPATH, false, false);
+$plugin_data = get_plugin_data(PLUGIN_FILEPATH, false, false);
 // Ex: My Plugin Name
-define(__NAMESPACE__.'\PLUGIN_NAME', $plugin['Name']);
+define(__NAMESPACE__.'\PLUGIN_NAME', $plugin_data['Name']);
 // Ex: Some plugin description
-define(__NAMESPACE__.'\PLUGIN_DESCRIPTION', $plugin['Description']);
+define(__NAMESPACE__.'\PLUGIN_DESCRIPTION', $plugin_data['Description']);
 // Ex: 1.2.3
-define(__NAMESPACE__.'\PLUGIN_VERSION', $plugin['Version']);
+define(__NAMESPACE__.'\PLUGIN_VERSION', $plugin_data['Version']);
 // Ex: Code Potent
-define(__NAMESPACE__.'\PLUGIN_AUTHOR', $plugin['AuthorName']);
+define(__NAMESPACE__.'\PLUGIN_AUTHOR', $plugin_data['AuthorName']);
 // Ex: https://codepotent.com
-define(__NAMESPACE__.'\PLUGIN_AUTHOR_URL', $plugin['AuthorURI']);
+define(__NAMESPACE__.'\PLUGIN_AUTHOR_URL', $plugin_data['AuthorURI']);
 // Ex: https://codepotent.com/classicpress/plugins/
-define(__NAMESPACE__.'\PLUGIN_URL', $plugin['PluginURI']);
+define(__NAMESPACE__.'\PLUGIN_URL', $plugin_data['PluginURI']);
 
 // -----------------------------------------------------------------------------
 // Custom post type and JSON identifiers.
