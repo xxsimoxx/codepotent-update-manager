@@ -4,7 +4,7 @@
  * -----------------------------------------------------------------------------
  * Plugin Name: Update Manager
  * Description: Painlessly push updates to your ClassicPress plugin users! Serve updates from GitHub, your own site, or somewhere in the cloud. 100% integrated with the ClassicPress update process; slim and performant.
- * Version: 2.4.4
+ * Version: 2.4.5
  * Requires PHP: 5.6
  * Requires CP: 1.0
  * Author: Simone Fioravanti
