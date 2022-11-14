@@ -106,7 +106,6 @@ class TransientInspector {
 			wp_enqueue_script(PLUGIN_SLUG.'-transient-inspector', URL_SCRIPTS.'/transient-inspector.js', ['jquery'], time(), true);
 			wp_enqueue_style(PLUGIN_SLUG.'-transient-inspector', URL_STYLES.'/transient-inspector.css', [], time());
 
-			wp_localize_script(PLUGIN_SLUG.'-transient-inspector', 'plugin_slug', PLUGIN_SLUG);
 		}
 
 	}
