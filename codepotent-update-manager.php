@@ -235,8 +235,7 @@ class UpdateManager {
 	/**
 	 * Enqueue admin scripts.
 	 *
-	 * The method enqueues both scripts and styles on an as-needed basis. Labels
-	 * used in JavaScript functionality are also localized here.
+	 * The method enqueues both scripts and styles on an as-needed basis.
 	 *
 	 * @author John Alarcon
 	 *
@@ -261,11 +260,6 @@ class UpdateManager {
 				// Enqueue assests.
 				wp_enqueue_style(PLUGIN_SLUG.'-post-edit-'.$component, URL_STYLES.'/post-edit.css', [], time());
 				wp_enqueue_script(PLUGIN_SLUG.'-post-edit-'.$component, URL_SCRIPTS.'/post-edit.js', ['jquery'], time(), true);
-
-				// Localize JS variables.
-				wp_localize_script(PLUGIN_SLUG.'-post-edit-'.$component, 'slug', PLUGIN_SLUG);
-				wp_localize_script(PLUGIN_SLUG.'-post-edit-'.$component, 'endpoint_notice', esc_html__('You must set the Endpoint Identifier before you can save the record.', 'codepotent-update-manager'));
-				wp_localize_script(PLUGIN_SLUG.'-post-edit-'.$component, 'confirmation', esc_html__('You are about to completely replace all the text currently in the editor! Is this what you meant to do?', 'codepotent-update-manager'));
 
 			}
 
