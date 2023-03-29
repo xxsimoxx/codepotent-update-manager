@@ -26,7 +26,7 @@ if (!defined('ABSPATH')) {
 
 /*
 This class is used by programmers to test updates in real time.
-The only function that needs a nonce is purge_transients() as this deletes 
+The only function that needs a nonce is purge_transients() as this deletes
 transient, so habe to be secure. And the function itself verifies the transient.
 */
 
@@ -106,6 +106,8 @@ class TransientInspector {
 			wp_enqueue_script(PLUGIN_SLUG.'-transient-inspector', URL_SCRIPTS.'/transient-inspector.js', ['jquery'], time(), true);
 			wp_enqueue_style(PLUGIN_SLUG.'-transient-inspector', URL_STYLES.'/transient-inspector.css', [], time());
 
+			wp_localize_script(PLUGIN_SLUG.'-transient-inspector', 'umtransient', ['plugin_slug' => PLUGIN_SLUG]);
+
 		}
 
 	}
@@ -155,7 +157,7 @@ class TransientInspector {
 	Doing that in purge_transients() function that check for nonce
 	before deleting transients
 	*/
-	
+
 	// phpcs:disable WordPress.Security.NonceVerification.Recommended
 
 	/**
@@ -711,12 +713,12 @@ class TransientInspector {
 
 		return $markup;
 	}
-	
+
 	private function markup_transient_inspector_overview_themes($themes) {
 
 		// Initialization.
 		$markup = '';
-		$theme_update_count =count($themes->response); 
+		$theme_update_count =count($themes->response);
 
 		// Theme update table.
 		$markup .= '<h2>'.esc_html__('Themes', 'codepotent-update-manager').' ('.$theme_update_count.')</h2>';
@@ -802,8 +804,8 @@ class TransientInspector {
 		$markup .= '</tfoot>';
 		$markup .= '</table>';
 
-	
-	
+
+
 		// Were there theme updates? If so, markup their previews; keep hidden.
 		if (empty($themes->response)) {
 			return $markup;

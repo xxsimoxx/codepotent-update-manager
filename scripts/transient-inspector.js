@@ -17,7 +17,7 @@
 jQuery(document).ready(function($) {
 
 	// Click handler for popping plugin details.
-	$('.codepotent-update-manager-thickbox-plugin').click(function(e) {
+	$('.codepotent-update-manager-thickbox-plugin').on('click', function(e) {
 		e.preventDefault;
 		var width = $(window).width() * .5;
 		if (width > 750) {
@@ -49,20 +49,20 @@ jQuery(document).ready(function($) {
 	// Direct URL calls and click handling for navigation.
 	var my_hash = window.location.hash.substr(1);
 	if (!my_hash) {
-		$('h2.'+plugin_slug+'-admin-nav-tab-wrapper a:first-child').addClass('nav-tab-active');
-		$('.'+plugin_slug+'-admin-tab.first').css('display', 'block');
+		$('h2.'+umtransient.plugin_slug+'-admin-nav-tab-wrapper a:first-child').addClass('nav-tab-active');
+		$('.'+umtransient.plugin_slug+'-admin-tab.first').css('display', 'block');
 	} else {
 		$('a#tab-'+my_hash).addClass('nav-tab-active');
-		$('p.'+plugin_slug+'-admin-tab.tab-'+my_hash+'-submenu').css('display', 'block');
-		$('div.'+plugin_slug+'-admin-tab.tab-'+my_hash+'-content').css('display', 'block');
+		$('p.'+umtransient.plugin_slug+'-admin-tab.tab-'+my_hash+'-submenu').css('display', 'block');
+		$('div.'+umtransient.plugin_slug+'-admin-tab.tab-'+my_hash+'-content').css('display', 'block');
 	}
-	$('h2.'+plugin_slug+'-admin-nav-tab-wrapper a').click(function(e){
-		$('h2.'+plugin_slug+'-admin-nav-tab-wrapper a').attr('class', 'nav-tab');
-		$('.'+plugin_slug+'-admin-tab').css('display', 'none');
+	$('h2.'+umtransient.plugin_slug+'-admin-nav-tab-wrapper a').on('click', function(e){
+		$('h2.'+umtransient.plugin_slug+'-admin-nav-tab-wrapper a').attr('class', 'nav-tab');
+		$('.'+umtransient.plugin_slug+'-admin-tab').css('display', 'none');
 		$(this).addClass('nav-tab-active');
 		$(this).onmouseup = this.blur();
-		$('p.'+plugin_slug+'-admin-tab.tab-'+e.currentTarget.hash.substr(1)+'-submenu').css('display', 'block');
-		$('div.'+plugin_slug+'-admin-tab.tab-'+e.currentTarget.hash.substr(1)+'-content').css('display', 'block');
+		$('p.'+umtransient.plugin_slug+'-admin-tab.tab-'+e.currentTarget.hash.substr(1)+'-submenu').css('display', 'block');
+		$('div.'+umtransient.plugin_slug+'-admin-tab.tab-'+e.currentTarget.hash.substr(1)+'-content').css('display', 'block');
 	});
 
 });

@@ -22,7 +22,7 @@ jQuery(document).ready(function($) {
 	}
 
 	// Enable save buttons only when identifier has a value (even if invalid).
-	$('#codepotent-update-manager-identifier').keyup(function () {
+	$('#codepotent-update-manager-identifier').on('keyup', function () {
 		if ($(this).val() === '') {
 			$('input#save-post').prop('disabled', true);
 			$('input#publish').prop('disabled', true);
@@ -33,7 +33,7 @@ jQuery(document).ready(function($) {
 	});
 
 	// Prevent enter-key saves.
-	$('form#post').keydown(function (e) {
+	$('form#post').on('keydown', function (e) {
 		if (e.keyCode == 13) {
 			if ($('#codepotent-update-manager-identifier').val() === '') {
 				e.preventDefault();
@@ -42,18 +42,18 @@ jQuery(document).ready(function($) {
 		}
 	});
 
-	$('#submitpost input').mouseover(function(e) {
+	$('#submitpost input').on('mouseover', function(e) {
 		if ($(this)[0]['disabled']) {
-			alert(endpoint_notice);
+			alert(umdata.endpoint_notice);
 		}
 	});
 
 	// Click handler for inserting template text via button.
-	$('#'+slug+'-autocompleters button').click(function (e) {
+	$('#'+umdata.slug+'-autocompleters button').on('click', function (e) {
 		// Prevent default link behavior.
 		e.preventDefault();
 		// Replacement cannot be undone; have the user confirm.
-		var ok = confirm(confirmation);
+		var ok = confirm(umdata.confirmation);
    		if (!ok) {
    			return
    		};
@@ -62,17 +62,17 @@ jQuery(document).ready(function($) {
 			var value = get_default_text($(this)[0]['dataset']['component']);
 		}
 		// Place the text in the editor.
-		$('#'+slug+'-editor').val(value)
+		$('#'+umdata.slug+'-editor').val(value)
 		// Nothing to see here; move along.
 		return false;
 	});
 
 	// Click handler for inserting template text via link.
-	$('#'+slug+'-autocompleters a').click(function (e) {
+	$('#'+umdata.slug+'-autocompleters a').on('click', function (e) {
 		// Prevent default link behavior.
 		e.preventDefault();
 		// Replacement cannot be undone; have the user confirm.
-		var ok = confirm(confirmation);
+		var ok = confirm(umdata.confirmation);
 		if (!ok) {
 			return
 		};
@@ -82,7 +82,7 @@ jQuery(document).ready(function($) {
 			var value = get_default_text_with_example_data(this.dataset.component);
 		}
 		// Place the text in the editor.
-		$('#'+slug+'-editor').val(value)
+		$('#'+umdata.slug+'-editor').val(value)
 		// Nothing to see here; move along.
 		return false;
 	});

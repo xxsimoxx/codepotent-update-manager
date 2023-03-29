@@ -261,6 +261,14 @@ class UpdateManager {
 				wp_enqueue_style(PLUGIN_SLUG.'-post-edit-'.$component, URL_STYLES.'/post-edit.css', [], time());
 				wp_enqueue_script(PLUGIN_SLUG.'-post-edit-'.$component, URL_SCRIPTS.'/post-edit.js', ['jquery'], time(), true);
 
+				// Localize JS variables.
+				$localization_data = [
+					'slug'            => PLUGIN_SLUG,
+					'endpoint_notice' => esc_html__('You must set the Endpoint Identifier before you can save the record.', 'codepotent-update-manager'),
+					'confirmation'    => esc_html__('You are about to completely replace all the text currently in the editor! Is this what you meant to do?', 'codepotent-update-manager'),
+				];
+				wp_localize_script(PLUGIN_SLUG.'-post-edit-'.$component, 'umdata', $localization_data);
+
 			}
 
 		}
