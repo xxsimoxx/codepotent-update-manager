@@ -70,7 +70,7 @@ class UpdateClient {
 	private $component_data = '';
 
 	private $identifier     = null;
-	private $derver_slug    = null;
+	private $server_slug    = null;
 
 	/**
 	 * Constructor.
