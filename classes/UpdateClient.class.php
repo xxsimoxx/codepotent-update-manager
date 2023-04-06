@@ -6,7 +6,7 @@
  * Author: Simone Fioravanti
  * Author URI: https://software.gieffeedizioni.it
  * API Version: 2.0.0
- * Last modified on Update Manager release: 2.4.3
+ * Last modified on Update Manager release: 2.4.7
  * -----------------------------------------------------------------------------
  * This is free software released under the terms of the General Public License,
  * version 2, or later. It is distributed WITHOUT ANY WARRANTY; without even the
@@ -14,7 +14,7 @@
  * text of the license is available at https://www.gnu.org/licenses/gpl-2.0.txt.
  * -----------------------------------------------------------------------------
  * Copyright 2021,		John Alarcon (Code Potent)
- *           2021-2022,	Simone Fioravanti
+ *           2021-2023,	Simone Fioravanti
  * -----------------------------------------------------------------------------
  */
 
@@ -68,6 +68,9 @@ class UpdateClient {
 	 * saving this value will cut an extra HTTP call to the update server.
 	 */
 	private $component_data = '';
+
+	private $identifier     = null;
+	private $derver_slug    = null;
 
 	/**
 	 * Constructor.
@@ -579,7 +582,7 @@ class UpdateClient {
 
 		// Initialize the data to be posted.
 		$body = apply_filters('codepotent_update_manager_filter_'.$this->config['id'].'_client_request', $this->config['post']);
-		
+
 		if ($action === 'plugin_information') {
 
 			// If querying a single plugin, assign it to the post body.
