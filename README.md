@@ -38,8 +38,9 @@ To setup a plugin to work with the Update Manager, the following general steps a
 1. Copy the `UpdateClient.class.php` file (from the Update Manager plugin) into your plugin's file structure.
 1. Set `namespace` to a unique value; line 22.
 1. Set `UPDATE_SERVER` to the URL where your _Update Manager_ plugin is installed; line 25.
-1. Set `SECURE_SOURCE` to the starting part of the URL of the updated zip file if you want to add an extra layer of security; line 30. See line 236 to understand how check is done.
-1. Set `UPDATE_TYPE` to 'plugin'; line 33.
+1. Set `USE_DIRECTORY` to `true` to skip loading the class starting from ClassicPress v.2; line 30.
+1. Set `SECURE_SOURCE` to the starting part of the URL of the updated zip file if you want to add an extra layer of security; line 35. See line 236 to understand how check is done.
+1. Set `UPDATE_TYPE` to `plugin` or `theme`; line 38.
 1. Use `require_once('/path/to/UpdateClient.class.php')` in your plugin's primary PHP file to run the update client.
 
 ### Creating an Update Endpoint for a Plugin
@@ -218,7 +219,7 @@ To work with the data received from incoming requests, the following filter can 
 add_filter('codepotent_update_manager_filter_{component-type}_request', 'some_function_name');
 </pre>
 
---- 
+---
 ### Processing Outgoing Responses
 When a request is received by the Update Manager plugin, the relevant plugin (or theme) data is assembled and passed back as a response to the calling site. This filter allows final processing of that data before it is returned to the calling site. This filter accepts 2 arguments, `data` and `request` and returns the possible-amended `data`.
 
@@ -232,7 +233,7 @@ When a request is received by the Update Manager plugin, the relevant plugin (or
 add_filter('codepotent_update_manager_filter_parsed_component_data', 'some_function_name', 10, 2);
 </pre>
 
---- 
+---
 ### Active Installations
 The Update Manager plugin does not track or know how many active installations there are of any given plugin. If you are otherwise tracking those numbers, you can filter them into the remote modal windows by adding the following filter to a utility plugin. The filter accepts only uses the first of the two arguments, `$number`. Replace `{identifier}` with your plugin identifier, ie, `my-plugin-dir/my-plugin-file.php`.
 
@@ -242,7 +243,7 @@ The Update Manager plugin does not track or know how many active installations t
 add_filter('codepotent_update_manager_{identifier}_active_installs', 'some_function_name', 10, 2);
 </pre>
 
---- 
+---
 ### Admin Menu
 Position To change the admin menu item's position, this filter can be added to a utility plugin. See also the following table of menu position values.
 
@@ -252,7 +253,7 @@ Position To change the admin menu item's position, this filter can be added to a
 add_filter('codepotent_update_manager_menu_pos', 'some_function_name');
 </pre>
 
-**Menu Item Positions** **1**: _Top_ of menu **2**: below _Dashboard_ **5**: below _Posts_ **10**: below _Media_ **20**: below _Pages_ **25**: below _Comments_ **60**: below _first separator_ **65**: below _Plugins_ **70**: below _Users_ **75**: below _Tools_ **80**: below _Settings_ **100**: below _second separator_ **null**: below _Comments_, in natural order; default 
+**Menu Item Positions** **1**: _Top_ of menu **2**: below _Dashboard_ **5**: below _Posts_ **10**: below _Media_ **20**: below _Pages_ **25**: below _Comments_ **60**: below _first separator_ **65**: below _Plugins_ **70**: below _Users_ **75**: below _Tools_ **80**: below _Settings_ **100**: below _second separator_ **null**: below _Comments_, in natural order; default
 
 ---
 ### <a name="docs-filters">Plugin Images Path & URL</a>
@@ -292,7 +293,7 @@ function my_custom_image_url($url) {
 add_filter('codepotent_update_manager_image_url', 'my_custom_image_url');
 </pre>
 
---- 
+---
 ### Filter Notification
 Email Properties If you are using the notification features for endpoints to allow your testers to contact you with feedback, you can filter the default subject and body of the email message with the following filters.
 
@@ -309,22 +310,22 @@ function some_function_name($body) {
 add_filter('codepotent_update_manager_notification_email_body', 'some_function_name');
 </pre>
 
---- 
+---
 
 ### Footer Credit
 For extension authors, this filter allows for a credit link to be appended to the Code Potent footer text. This filter accepts a single argument, `$text`, which is an empty string, by default. Note that all HTML is stripped, except for the <a> tag. The URLs can be as long as needed, but, the visible text and links may be truncated at 50 characters. This filter is for adding a credit link, not for marketing text and upsells; misusing this feature will cause it to be removed.
 
 <pre>function some_function_name($text) {
-    return 'Featuring &lt;a href=&quot;#&quot;&gt;My Extension&lt;/a&gt; by &lt;a href=&quot;#&quot;&gt;Author Name&lt;/a&gt;';    
+    return 'Featuring &lt;a href=&quot;#&quot;&gt;My Extension&lt;/a&gt; by &lt;a href=&quot;#&quot;&gt;Author Name&lt;/a&gt;';
 }
 add_filter('codepotent_update_manager_extension_footer_{your-slug-here}', 'some_function_name');
 </pre>
 
---- 
+---
 
 
 ### Request body
-This filter allows to add fields to the request made by the `UpdateClient.class.php`. It's useful for plugin authors that wants to pass data to some Update Manager extension. For example Stats for Update Manager uses it to allow plugin authors to give their users the choice to opt-in or out from their site being counted usage in statistics. 
+This filter allows to add fields to the request made by the `UpdateClient.class.php`. It's useful for plugin authors that wants to pass data to some Update Manager extension. For example Stats for Update Manager uses it to allow plugin authors to give their users the choice to opt-in or out from their site being counted usage in statistics.
 
 <pre>function some_function_name($body) {
 	if( 'no' === get_option( 'my-slug-usage-statistics' ) ) {
@@ -335,7 +336,7 @@ This filter allows to add fields to the request made by the `UpdateClient.class.
 add_filter('codepotent_update_manager_filter_{your-slug-here}_client_request', 'some_function_name');
 </pre>
 
---- 
+---
 ### Manual Installation <a name="install-manual"></a>
 
 - **Download** the zip file to your local computer
