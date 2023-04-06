@@ -39,6 +39,12 @@ class TransientInspector {
 	 */
 	public $components = ['plugin', 'theme', 'all'];
 
+	private $nonce             = '';
+	private $is_plugin_manager = '';
+	private $is_theme_manager  = '';
+	private $component         = '';
+	private $action            = '';
+
 	/**
 	 * Constructor.
 	 *
