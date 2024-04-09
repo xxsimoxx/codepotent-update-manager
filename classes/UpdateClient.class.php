@@ -43,10 +43,9 @@ if (!defined('ABSPATH')) {
 }
 
 // Should directory take over?
-$running_on = function_exists('classicpress_version') ? classicpress_version() : '0';
 if (
 		USE_DIRECTORY &&
-		version_compare($running_on, '2.0.0', '>=') &&
+		version_compare(function_exists('classicpress_version') ? classicpress_version() : '0', '2', '>=') &&
 		is_plugin_active('classicpress-directory-integration/classicpress-directory-integration.php')
 	) {
 	return;
