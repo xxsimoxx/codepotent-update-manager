@@ -277,7 +277,7 @@ class PluginEndpoint {
 		echo '				</p>'."\n";
 		echo '				<p class="description">';
 		echo sprintf(
-				esc_html__('Use the form %sfolder-name/file-name.php%s to match that of your plugin.', 'codepotent-update-manager'),
+				esc_html__('Use the form %1$sfolder-name/file-name.php%2$s to match that of your plugin.', 'codepotent-update-manager'),
 					'<code>',
 					'</code>');
 		echo '</p>'."\n";
@@ -293,7 +293,7 @@ class PluginEndpoint {
 		echo '				</p>'."\n";
 		echo '				<p class="description">';
 		echo sprintf(
-			esc_html__('Describe the plugin as if writing a %sreadme.txt%s file for it. Basic %smarkdown%s is supported. HTML and PHP tags are stripped.', 'codepotent-update-manager'),
+			esc_html__('Describe the plugin as if writing a %1$sreadme.txt%2$s file for it. Basic %3$smarkdown%4$s is supported. HTML and PHP tags are stripped.', 'codepotent-update-manager'),
 				'<a href="https://developer.wordpress.org/plugins/wordpress-org/how-your-readme-txt-works/">',
 				'</a>',
 				'<a href="https://github.com/adam-p/markdown-here/wiki/Markdown-Cheatsheet">',
@@ -500,7 +500,7 @@ class PluginEndpoint {
 		// Explanatory text.
 		echo '<p>';
 		echo sprintf(
-			esc_html__('%sWork smarter!%s Click to auto-fill the editor with a premade template you can fill out.', 'codepotent-update-manager'),
+			esc_html__('%1$sWork smarter!%2$s Click to auto-fill the editor with a premade template you can fill out.', 'codepotent-update-manager'),
 			'<strong>',
 			'</strong>');
 		echo '</p>';
@@ -513,7 +513,7 @@ class PluginEndpoint {
 		// Additional options.
 		echo '<p>';
 		echo sprintf(
-			esc_html__('You can insert a %sfully completed example%s to get your bearings, or even just see the %sabsolute minimum requirements%s.', 'codepotent-update-manager'),
+			esc_html__('You can insert a %1$sfully completed example%2$s to get your bearings, or even just see the %3$sabsolute minimum requirements%4$s.', 'codepotent-update-manager'),
 			'<a href="#" class="with-examples" data-component="plugin">',
 			'</a>',
 			'<a href="#" class="reqs-only" data-component="plugin">',

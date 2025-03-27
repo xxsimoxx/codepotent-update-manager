@@ -78,8 +78,8 @@ function get_request() {
 		'post_type' => $post_type,
 		'post_status' => ['pending', 'publish'],
 		'posts_per_page' => 1,
-		'meta_key' => 'id',
-		'meta_value' => esc_attr($request[$type]),
+		'meta_key' => 'id', //phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
+		'meta_value' => esc_attr($request[$type]), //phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value
 	]);
 
 	// No data to work with? Bail.
@@ -171,7 +171,7 @@ function get_notification_email_subject($header) {
 
 	// Default email subject.
 	$subject = sprintf(
-		esc_html__('Report: %s v%s', 'codepotent-update-manager'),
+		esc_html__('Report: %1$s v%2$s', 'codepotent-update-manager'),
 		$header['name'],
 		$header['version']);
 
@@ -1161,12 +1161,12 @@ function markup_testing_notice($targets, $identifier, $header) {
 	$args = [];
 	if (!empty($targets['email'])) {
 		$subject = sprintf(
-			esc_html__('Pending Update Report: %s v%s', 'codepotent-update-manager'),
+			esc_html__('Pending Update Report: %1$s v%2$s', 'codepotent-update-manager'),
 			$header['name'],
 			$header['version']);
 		$lines = [];
 		$lines[] = sprintf(
-			esc_html__('We greatly appreciate your help and feedback in testing the update to %s version %s — thanks!', 'codepotent-update-manager'),
+			esc_html__('We greatly appreciate your help and feedback in testing the update to %1$s version %2$s — thanks!', 'codepotent-update-manager'),
 			$header['name'],
 			$header['version'])."\r\n\r\n";
 		$body = implode('', $lines);
@@ -1190,26 +1190,26 @@ function markup_testing_notice($targets, $identifier, $header) {
 
 	// Cautionary note regarding this being a testing update.
 	$note1 = sprintf(
-			esc_html__('%sCaution%s: This update is currently undergoing testing &#8211; it is not yet intended for production.', 'codepotent-update-manager'),
+			esc_html__('%1$sCaution%2$s: This update is currently undergoing testing &#8211; it is not yet intended for production.', 'codepotent-update-manager'),
 			'<strong>',
 			'</strong>');
 
 	// Texts for nudging users toward notifying you about any issues.
 	if (!empty($mail_url) && !empty($http_url)) {
 		$note2 = sprintf(
-			esc_html__('If you experience any issues, please %ssend an email%s or %sreport it here%s.', 'codepotent-update-manager'),
+			esc_html__('If you experience any issues, please %1$ssend an email%2$s or %3$sreport it here%4$s.', 'codepotent-update-manager'),
 			'<a href="'.esc_url($mail_url).'">',
 			'</a>',
 			'<a href="'.esc_url($http_url).'">',
 			'</a>');
 	} else if (!empty($mail_url)) {
 		$note2 = sprintf(
-			esc_html__('If you experience any issues, please %ssend an email%s.', 'codepotent-update-manager'),
+			esc_html__('If you experience any issues, please %1$ssend an email%2$s.', 'codepotent-update-manager'),
 			'<a href="'.esc_url($mail_url).'">',
 			'</a>');
 	} else if (!empty($http_url)) {
 		$note2 = sprintf(
-			esc_html__('If you experience any issues, please %sreport it here%s.', 'codepotent-update-manager'),
+			esc_html__('If you experience any issues, please %1$sreport it here%2$s.', 'codepotent-update-manager'),
 			'<a href="'.esc_url($http_url).'">',
 			'</a>');
 	}
@@ -1441,7 +1441,7 @@ function markup_header_data_legend($component) {
 	$markup .= '<blockquote>';
 	$markup .= '<p>';
 	$markup .= sprintf(
-			esc_html__('In the %s editor above, the lines between %s and %s are known as the &quot;header properties&quot;.', 'codepotent-update-manager'),
+			esc_html__('In the %1$s editor above, the lines between %2$s and %3$s are known as the &quot;header properties&quot;.', 'codepotent-update-manager'),
 			'<strong>'.ucfirst($component).' Details</strong>',
 			'<code>=== '.ucfirst($component).' Name ===</code>',
 			'<code>== Description ==</code>');
@@ -1469,7 +1469,7 @@ function markup_header_data_legend($component) {
 	$markup .= '<code class="'.esc_html(PLUGIN_SLUG).'-property-name">'.esc_html__('Version', 'codepotent-update-manager').'</code> ';
 	$markup .= '<em class="required">'.esc_html__('Required', 'codepotent-update-manager').'</em><br>';
 	$markup .= sprintf(
-			esc_html__('The latest version number for the %s. Semantic versions are supported, for example, %s.', 'codepotent-update-manager'),
+			esc_html__('The latest version number for the %1$s. Semantic versions are supported, for example, %2$s.', 'codepotent-update-manager'),
 			$component,
 			'<code>2.3.10</code>');
 	$markup .= '</p>';
@@ -1479,7 +1479,7 @@ function markup_header_data_legend($component) {
 	$markup .= '<code class="'.esc_html(PLUGIN_SLUG).'-property-name">'.esc_html__('Text Domain', 'codepotent-update-manager').'</code> ';
 	$markup .= '<em class="optional">'.esc_html__('Optional', 'codepotent-update-manager').'</em><br>';
 	$markup .= sprintf(
-			esc_html__('The text domain used in your translated texts; often simply the %s own directory name, for example, %s.', 'codepotent-update-manager'),
+			esc_html__('The text domain used in your translated texts; often simply the %1$s own directory name, for example, %2$s.', 'codepotent-update-manager'),
 			$component.'&#39;s',
 			'<code>my-'.$component.'-name</code>');
 	$markup .= '</p>';
@@ -1498,7 +1498,7 @@ function markup_header_data_legend($component) {
 	$markup .= '<code class="'.esc_html(PLUGIN_SLUG).'-property-name">'.esc_html__('Requires PHP', 'codepotent-update-manager').'</code> ';
 	$markup .= '<em class="optional">'.esc_html__('Optional', 'codepotent-update-manager').'</em><br>';
 	$markup .= sprintf(
-			esc_html__('The minimum version of PHP required by the %s, for example, %s, %s, or %s.', 'codepotent-update-manager'),
+			esc_html__('The minimum version of PHP required by the %1$s, for example, %2$s, %3$s, or %4$s.', 'codepotent-update-manager'),
 			$component,
 			'<code>5.6.40</code>',
 			'<code>7</code>',
@@ -1511,7 +1511,7 @@ function markup_header_data_legend($component) {
 	$markup .= '<code class="'.esc_html(PLUGIN_SLUG).'-property-name">'.esc_html__('Requires', 'codepotent-update-manager').'</code> ';
 	$markup .= '<em class="required">'.esc_html__('Required', 'codepotent-update-manager').'</em><br>';
 	$markup .= sprintf(
-			esc_html__('The minimum version of ClassicPress required by the %s, for example, %s or %s.', 'codepotent-update-manager'),
+			esc_html__('The minimum version of ClassicPress required by the %1$s, for example, %2$s or %3$s.', 'codepotent-update-manager'),
 			$component,
 			'<code>1.0.0</code>',
 			'<code>1.1.2</code>'
@@ -1523,7 +1523,7 @@ function markup_header_data_legend($component) {
 	$markup .= '<code class="'.esc_html(PLUGIN_SLUG).'-property-name">'.esc_html__('Tested', 'codepotent-update-manager').'</code> ';
 	$markup .= '<em class="optional">'.esc_html__('Optional', 'codepotent-update-manager').'</em><br>';
 	$markup .= sprintf(
-			esc_html__('The maximum version of ClassicPress the %s has been tested with. You can set a specific ClassicPress version number here to indicate compatibility up to a certain version, or, you can set it to %s to indicate 100&#37; compatible.', 'codepotent-update-manager'),
+			esc_html__('The maximum version of ClassicPress the %1$s has been tested with. You can set a specific ClassicPress version number here to indicate compatibility up to a certain version, or, you can set it to %2$s to indicate 100&#37; compatible.', 'codepotent-update-manager'),
 			$component,
 			'<code>4.9.99</code>');
 	$markup .= '</p>';
@@ -1555,7 +1555,7 @@ function markup_header_data_legend($component) {
 	}
 	$markup .= '<em class="optional">'.esc_html__('Optional', 'codepotent-update-manager').'</em><br>';
 	$markup .= sprintf(
-			esc_html__('A link to the %s own page on the web, for example, %s.', 'codepotent-update-manager'),
+			esc_html__('A link to the %1$s own page on the web, for example, %2$s.', 'codepotent-update-manager'),
 			$component.'&#39;s',
 			'<code>https://site.com/my-'.$component.'/</code>');
 	$markup .= '</p>';
@@ -1565,7 +1565,7 @@ function markup_header_data_legend($component) {
 	$markup .= '<code class="'.esc_html(PLUGIN_SLUG).'-property-name">'.esc_html__('Download link', 'codepotent-update-manager').'</code> ';
 	$markup .= '<em class="required">'.esc_html__('Required', 'codepotent-update-manager').'</em><br>';
 	$markup .= sprintf(
-			esc_html__('A link to the zip file with the updated version of the %s, for example, %s.', 'codepotent-update-manager'),
+			esc_html__('A link to the zip file with the updated version of the %1$s, for example, %2$s.', 'codepotent-update-manager'),
 			$component,
 			'<code>https://site.com/the-updated-file.zip</code>');
 	$markup .= '</p>';
@@ -1582,7 +1582,7 @@ function markup_header_data_legend($component) {
 	$markup .= '<code class="'.esc_html(PLUGIN_SLUG).'-property-name">'.esc_html__('License', 'codepotent-update-manager').'</code> ';
 	$markup .= '<em class="optional">'.esc_html__('Optional', 'codepotent-update-manager').'</em><br>';
 	$markup .= sprintf(
-			esc_html__('The license type under which the %s is released, for example, %s or %s.', 'codepotent-update-manager'),
+			esc_html__('The license type under which the %1$s is released, for example, %2$s or %3$s.', 'codepotent-update-manager'),
 			$component,
 			'<code>GPLv2</code>',
 			'<code>GPLv3</code>'

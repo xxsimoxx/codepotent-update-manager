@@ -25,7 +25,7 @@ if (!defined('ABSPATH')) {
 class Parsedown {
 	# ~
 
-	const version = '1.7.3';
+	const VERSION = '1.7.3';
 
 	# ~
 
@@ -1074,7 +1074,7 @@ class Parsedown {
 
 		# $excerpt is based on the first occurrence of a marker
 
-		while ($excerpt = strpbrk($text, $this->inlineMarkerList))
+		while ($excerpt = strpbrk($text, $this->inlineMarkerList)) // phpcs:ignore WordPress.CodeAnalysis.AssignmentInCondition.FoundInWhileCondition
 		{
 			$marker = $excerpt[0];
 

@@ -367,7 +367,7 @@ class TransientInspector {
 
 		// Date and time.
 		$markup .= sprintf(
-				esc_html__('%sLast checked%s: %s at %s', 'codepotent-update-manager'),
+				esc_html__('%1$sLast checked%2$s: %3$s at %4$s', 'codepotent-update-manager'),
 				'<strong>',
 				'</strong>',
 				gmdate('F j, Y', $timestamp),
@@ -630,7 +630,7 @@ class TransientInspector {
 	 * @return string HTML markup.
 	 */
 	private function markup_transient_inspector_overview_plugins($plugins) {
-
+		//phpcs:disable WordPress.DB.SlowDBQuery.slow_db_query_meta_value, WordPress.DB.SlowDBQuery.slow_db_query_meta_key
 		$markup = '';
 		$plugin_update_count = count($plugins->response);
 
